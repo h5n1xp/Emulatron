@@ -7,13 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */ = {isa = PBXBuildFile; fileRef = C91BFA0D1E46149F00864200 /* EMUDos.m */; };
+		C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6551E4541A600DBF0F8 /* EMUExec.m */; };
+		C974B6591E4541DF00DBF0F8 /* EMULibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6581E4541DF00DBF0F8 /* EMULibrary.m */; };
 		C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */; };
 		C9C4CB8E1E43BA460052AD45 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB8D1E43BA460052AD45 /* main.m */; };
 		C9C4CB901E43BA460052AD45 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */; };
 		C9C4CB931E43BA460052AD45 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9C4CB911E43BA460052AD45 /* MainMenu.xib */; };
+		C9C4CB9F1E43BAF90052AD45 /* m68kcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB9E1E43BAF90052AD45 /* m68kcpu.c */; };
+		C9C4CBA81E43BBA50052AD45 /* Emulator.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBA71E43BBA50052AD45 /* Emulator.m */; };
+		C9C4CBAE1E43C4B20052AD45 /* m68kops.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBAD1E43C4B20052AD45 /* m68kops.c */; };
+		C9C4CBB21E43C4CD0052AD45 /* m68kopac.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBAF1E43C4CD0052AD45 /* m68kopac.c */; };
+		C9C4CBB31E43C4CD0052AD45 /* m68kopdm.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB01E43C4CD0052AD45 /* m68kopdm.c */; };
+		C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB11E43C4CD0052AD45 /* m68kopnz.c */; };
+		C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB51E43C5F70052AD45 /* sim.c */; };
+		C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB71E43C67B0052AD45 /* m68kdasm.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C91BFA0C1E46149F00864200 /* EMUDos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUDos.h; sourceTree = "<group>"; };
+		C91BFA0D1E46149F00864200 /* EMUDos.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUDos.m; sourceTree = "<group>"; };
+		C974B6541E4541A600DBF0F8 /* EMUExec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUExec.h; sourceTree = "<group>"; };
+		C974B6551E4541A600DBF0F8 /* EMUExec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUExec.m; sourceTree = "<group>"; };
+		C974B6571E4541DF00DBF0F8 /* EMULibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMULibrary.h; sourceTree = "<group>"; };
+		C974B6581E4541DF00DBF0F8 /* EMULibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMULibrary.m; sourceTree = "<group>"; };
 		C9C4CB861E43BA460052AD45 /* Emulatron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Emulatron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9C4CB891E43BA460052AD45 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -21,6 +38,21 @@
 		C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C9C4CB921E43BA460052AD45 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		C9C4CB941E43BA460052AD45 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C9C4CB9D1E43BAEE0052AD45 /* m68k.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68k.h; sourceTree = "<group>"; };
+		C9C4CB9E1E43BAF90052AD45 /* m68kcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kcpu.c; sourceTree = "<group>"; };
+		C9C4CBA01E43BB030052AD45 /* m68kcpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = m68kcpu.h; sourceTree = "<group>"; };
+		C9C4CBA51E43BB2C0052AD45 /* m68kconf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = m68kconf.h; sourceTree = "<group>"; };
+		C9C4CBA61E43BBA50052AD45 /* Emulator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Emulator.h; sourceTree = "<group>"; };
+		C9C4CBA71E43BBA50052AD45 /* Emulator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Emulator.m; sourceTree = "<group>"; };
+		C9C4CBA91E43BDCD0052AD45 /* sim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sim.h; sourceTree = "<group>"; };
+		C9C4CBAC1E43C4A90052AD45 /* m68kops.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = m68kops.h; sourceTree = "<group>"; };
+		C9C4CBAD1E43C4B20052AD45 /* m68kops.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kops.c; sourceTree = "<group>"; };
+		C9C4CBAF1E43C4CD0052AD45 /* m68kopac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopac.c; sourceTree = "<group>"; };
+		C9C4CBB01E43C4CD0052AD45 /* m68kopdm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopdm.c; sourceTree = "<group>"; };
+		C9C4CBB11E43C4CD0052AD45 /* m68kopnz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopnz.c; sourceTree = "<group>"; };
+		C9C4CBB51E43C5F70052AD45 /* sim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sim.c; sourceTree = "<group>"; };
+		C9C4CBB71E43C67B0052AD45 /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
+		C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = endianMacros.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,12 +85,24 @@
 		C9C4CB881E43BA460052AD45 /* Emulatron */ = {
 			isa = PBXGroup;
 			children = (
+				C9C4CB9A1E43BAC50052AD45 /* Musashi */,
+				C9C4CBA91E43BDCD0052AD45 /* sim.h */,
+				C9C4CBB51E43C5F70052AD45 /* sim.c */,
+				C9C4CBA61E43BBA50052AD45 /* Emulator.h */,
+				C9C4CBA71E43BBA50052AD45 /* Emulator.m */,
+				C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */,
 				C9C4CB891E43BA460052AD45 /* AppDelegate.h */,
 				C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */,
 				C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */,
 				C9C4CB911E43BA460052AD45 /* MainMenu.xib */,
 				C9C4CB941E43BA460052AD45 /* Info.plist */,
 				C9C4CB8C1E43BA460052AD45 /* Supporting Files */,
+				C974B6571E4541DF00DBF0F8 /* EMULibrary.h */,
+				C974B6581E4541DF00DBF0F8 /* EMULibrary.m */,
+				C974B6541E4541A600DBF0F8 /* EMUExec.h */,
+				C974B6551E4541A600DBF0F8 /* EMUExec.m */,
+				C91BFA0C1E46149F00864200 /* EMUDos.h */,
+				C91BFA0D1E46149F00864200 /* EMUDos.m */,
 			);
 			path = Emulatron;
 			sourceTree = "<group>";
@@ -69,6 +113,23 @@
 				C9C4CB8D1E43BA460052AD45 /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C9C4CB9A1E43BAC50052AD45 /* Musashi */ = {
+			isa = PBXGroup;
+			children = (
+				C9C4CBAF1E43C4CD0052AD45 /* m68kopac.c */,
+				C9C4CBB01E43C4CD0052AD45 /* m68kopdm.c */,
+				C9C4CBB11E43C4CD0052AD45 /* m68kopnz.c */,
+				C9C4CBAC1E43C4A90052AD45 /* m68kops.h */,
+				C9C4CBAD1E43C4B20052AD45 /* m68kops.c */,
+				C9C4CB9D1E43BAEE0052AD45 /* m68k.h */,
+				C9C4CBA01E43BB030052AD45 /* m68kcpu.h */,
+				C9C4CB9E1E43BAF90052AD45 /* m68kcpu.c */,
+				C9C4CBB71E43C67B0052AD45 /* m68kdasm.c */,
+				C9C4CBA51E43BB2C0052AD45 /* m68kconf.h */,
+			);
+			name = Musashi;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,8 +203,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9C4CBB21E43C4CD0052AD45 /* m68kopac.c in Sources */,
+				C9C4CBB31E43C4CD0052AD45 /* m68kopdm.c in Sources */,
+				C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */,
+				C9C4CB9F1E43BAF90052AD45 /* m68kcpu.c in Sources */,
 				C9C4CB8E1E43BA460052AD45 /* main.m in Sources */,
 				C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */,
+				C9C4CBAE1E43C4B20052AD45 /* m68kops.c in Sources */,
+				C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */,
+				C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */,
+				C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */,
+				C9C4CBA81E43BBA50052AD45 /* Emulator.m in Sources */,
+				C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */,
+				C974B6591E4541DF00DBF0F8 /* EMULibrary.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,6 +324,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = L5VJPHXSKB;
 				INFOPLIST_FILE = Emulatron/Info.plist;
@@ -265,6 +338,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = L5VJPHXSKB;
 				INFOPLIST_FILE = Emulatron/Info.plist;
@@ -293,6 +367,7 @@
 				C9C4CB991E43BA460052AD45 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
