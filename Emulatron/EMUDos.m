@@ -13,34 +13,17 @@
 
 -(void)setupLibNode{
     
-    WRITE_LONG(_emulatorMemory, self.base, self.base+20);       // <- Pointer to libnode structure
-    WRITE_BYTE(_emulatorMemory, self.base+4, 0);                // flags... wherever they are...
-    WRITE_BYTE(_emulatorMemory, self.base+5, 0);                // padding... does nothing
-    WRITE_WORD(_emulatorMemory, self.base+6, 1024);             // Neg size, is this suposed to be signed? size of jump table in bytes
-    WRITE_WORD(_emulatorMemory, self.base+8, 32+12+24);         // Pos size, size of data area in bytes
-    WRITE_LONG(_emulatorMemory, self.base+10, self.base+32+12); // pointer to an ID string
-    WRITE_LONG(_emulatorMemory, self.base+14, 0);               // checksum... not used right now
-    WRITE_WORD(_emulatorMemory, self.base+18, 0);               // Open count... I'm always going to start at 0 :)
+    self.libVersion  = 33; // for now... i don't actaully check it... so doesn't really matter
+    self.libRevision = 34; // as above
+    self.libOpenCount= 1;  // always a minimum of one for this library, as we alwasy need to access the drives.
     
-    //Data area starts as libBase + 20.. first thing here is the libnode structure :-)
-    WRITE_LONG(_emulatorMemory, self.base+20, 0);               // <- set the next node to 0
-    WRITE_LONG(_emulatorMemory, self.base+24, 0x5FFFFC);        // <- set the previous node to be the exec.library
-    WRITE_LONG(_emulatorMemory, self.base+28, self.base+32);    // pointer to the library name string
+    uint32_t namePtr = self.libData;    //locate the data space
+    uint32_t libIDPtr = namePtr + [self writeString:"dos.library" toAddress:namePtr]; //write the name string there and generate the next free address
+    self.libName = namePtr; //write the address of the string to the libNode
     
-    //Put the strings in the data area, libBase + 32
-    uint32_t pointer=self.base+32;
-    char* name     = "dos.library";
+    [self writeString:"dos 31.34 (04 Feb 2017)" toAddress:libIDPtr]; //write the ID string to the data area
+    self.libID = libIDPtr;  //write the address of the ID String to the lib structure.
     
-    for(int i=0;i<12;++i){
-        WRITE_BYTE(_emulatorMemory, pointer, name[i]);
-        pointer++;
-    }
-    
-    char* IdString = "dos 31.34 (04 Feb 2017)";
-    for(int i=0;i<24;++i){
-        WRITE_BYTE(_emulatorMemory, pointer, IdString[i]);
-        pointer++;
-    }
 }
 
 
@@ -52,14 +35,30 @@
         case   6:[self open];break;
         case  12:[self close];break;
         case  18:[self expunge];break;
-        case  22:[self reserved];break;
+        case  24:[self reserved];break;
+        case  84:[self lock];break;
+        case  90:[self unLock];break;
+        case 126:[self currentDir];break;
         case 132:[self ioError];break;
         case 474:[self printFault];break;
+        case 606:[self systemTagList];break;
         case 642:[self setIoErr];break;
         case 798:[self readArgs];break;
         case 858:[self freeArgs];break;
         default:[self unimplemented:lvo];break;
     }
+    
+}
+
+-(void)lock{
+    
+}
+
+-(void)unLock{
+    
+}
+
+-(void)currentDir{
     
 }
 
@@ -75,6 +74,10 @@
     
     printf("AmigaDOS: errorcode - %d, text:%s\n",code,header);
     return;
+}
+
+-(void)systemTagList{
+    
 }
 
 -(void)setIoErr{

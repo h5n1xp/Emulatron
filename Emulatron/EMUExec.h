@@ -13,6 +13,11 @@
 @property (nonatomic,strong) NSMutableArray* freeFastList;
 @property (nonatomic,strong) NSMutableArray* freeChipList;
 
+@property (nonatomic,strong) NSMutableArray* busyFastList;
+@property (nonatomic,strong) NSMutableArray* busyChipList;
 
--(NSInteger)addlibrary:(id)library;
+-(void)addlibrary:(id)library;
+
+-(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements;
+
 @end

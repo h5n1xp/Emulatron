@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */ = {isa = PBXBuildFile; fileRef = C91BFA0D1E46149F00864200 /* EMUDos.m */; };
+		C96E1AB01E4A121A007B85EF /* EMUMemoryBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */; };
 		C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6551E4541A600DBF0F8 /* EMUExec.m */; };
 		C974B6591E4541DF00DBF0F8 /* EMULibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6581E4541DF00DBF0F8 /* EMULibrary.m */; };
 		C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */; };
@@ -27,6 +28,8 @@
 /* Begin PBXFileReference section */
 		C91BFA0C1E46149F00864200 /* EMUDos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUDos.h; sourceTree = "<group>"; };
 		C91BFA0D1E46149F00864200 /* EMUDos.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUDos.m; sourceTree = "<group>"; };
+		C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUMemoryBlock.h; sourceTree = "<group>"; };
+		C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUMemoryBlock.m; sourceTree = "<group>"; };
 		C974B6541E4541A600DBF0F8 /* EMUExec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUExec.h; sourceTree = "<group>"; };
 		C974B6551E4541A600DBF0F8 /* EMUExec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUExec.m; sourceTree = "<group>"; };
 		C974B6571E4541DF00DBF0F8 /* EMULibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMULibrary.h; sourceTree = "<group>"; };
@@ -99,6 +102,8 @@
 				C9C4CB8C1E43BA460052AD45 /* Supporting Files */,
 				C974B6571E4541DF00DBF0F8 /* EMULibrary.h */,
 				C974B6581E4541DF00DBF0F8 /* EMULibrary.m */,
+				C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */,
+				C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */,
 				C974B6541E4541A600DBF0F8 /* EMUExec.h */,
 				C974B6551E4541A600DBF0F8 /* EMUExec.m */,
 				C91BFA0C1E46149F00864200 /* EMUDos.h */,
@@ -211,6 +216,7 @@
 				C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */,
 				C9C4CBAE1E43C4B20052AD45 /* m68kops.c in Sources */,
 				C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */,
+				C96E1AB01E4A121A007B85EF /* EMUMemoryBlock.m in Sources */,
 				C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */,
 				C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */,
 				C9C4CBA81E43BBA50052AD45 /* Emulator.m in Sources */,

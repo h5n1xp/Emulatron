@@ -22,8 +22,9 @@
 @property (nonatomic)        float          quantum;                //fractional seconds... 0.02 = 50th of a second
 @property (nonatomic)        NSInteger      PALClockSpeed;
 
-@property (nonatomic,strong) EMUExec*   execLibrary;
-@property (nonatomic,strong) EMUDos* dosLibrary;
+@property (nonatomic,strong) EMUExec*    execLibrary;
+@property (nonatomic,strong) EMUDos*     dosLibrary;
+@property (nonatomic,strong) EMULibrary* utilityLibrary;
 
 -(void)loadFile:(NSData*)file toSegListAt:(NSInteger)address;
 -(void)restartCPU;

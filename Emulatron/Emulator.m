@@ -15,6 +15,7 @@
 #define SUPERVISOR_STACK   0xFFFFF0 // Top of reserved kickstart space.
 #define EXEC_BASE          0xF80000 // Half way through the reserved Kickstart space.
 #define DOS_BASE           0xF70000 // 64k below exec.library
+#define UTIL_BASE          0xF60000 //
 
 //Load Seg defines... probably shouldn't be in this object... should be in EMUDos
 #define HUNK_UNIT           0999
@@ -305,102 +306,6 @@ void cpu_write_long(unsigned int address, unsigned int value){
         
     }
     
-
-
- 
-    
-    
-    
-    
-
-    /*
-    // VERY OLD CODE BELOW!. NOT DELETED YET... BUT WILL BE SOON
-    while(hunkPointer<file.length){
-        uint32_t RAMType = (READ_LONG(data, hunkPointer)   & 0xC0000000) >> 30;
-        uint32_t hunkType = READ_LONG(data, hunkPointer) & 0x3FFFFFFF;hunkPointer+=4;//Mask out any memory type flags (everything goes into fast ram for now)
-
-
-        
-        if(hunkType==HUNK_DEBUG){
-            printf("hunk_debug (ignore)\n");
-            uint32_t hunkSize = READ_LONG(data, hunkPointer)*4;hunkPointer+=4;
-            hunkPointer+=hunkSize;
-        }
-        
-        //if this is a code hunk, then load it into ram
-        if(hunkType==HUNK_CODE){
-            uint32_t hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-            uint32_t memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
-            
-            //copy data to ram
-            for(int j=0;j<hunkSize;++j){
-                _emulatorMemory[memPointer+j] =data[hunkPointer+j];
-            }
-            
-            printf("hunk:%d %dbytes(hunk_code) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]); //need to subtract from the hunk pointer as I incremented it earlier...
-            hunkPointer+=hunkSize;
-        }
-        
-        
-        if(hunkType==HUNK_RELOC32){
-            printf("hunk_reloc32");
-            int numberOfOffsets;
-            
-            do{
-                //quite neat as this catches the hunk_end symbol and moves quietly on...
-                numberOfOffsets =(READ_LONG(data, hunkPointer));hunkPointer+=4;
-                int hunkToReloc =(READ_LONG(data, hunkPointer));hunkPointer+=4;
-                printf("\n%d offsets in hunk %d:",numberOfOffsets,hunkToReloc);
-                
-                
-                for(int j=0;j<numberOfOffsets;++j){
-                    // uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
-                    //printf("@%d ",offset);
-                }
-                
-            }while(numberOfOffsets>0);
-            
-            printf("\n");
-        }
-        
-        //if this is a data hunk, then load it into ram
-        if(hunkType ==HUNK_DATA){
-            switch (RAMType) {
-                case 0: printf("FREE_MEM: ");break;
-                case 1: printf("CHIP_MEM: ");break;
-                case 2: printf("FAST_MEM: ");break;
-                case 3: printf("PANIC:");break;
-            }
-            uint32_t hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-            uint32_t memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
-            
-            //copy data to ram
-            for(int j=0;j<hunkSize;++j){
-                _emulatorMemory[memPointer+j] =data[hunkPointer+j];
-            }
-            
-            printf("hunk:%d %dbytes (hunk_data) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]); //need to subtract from the hunk pointer as I incremented it earlier...
-            hunkPointer+=hunkSize;
-        }
-        
-        if(hunkType==HUNK_END){
-            //move on...
-        }
-        
-        if( (hunkType != HUNK_CODE) && (hunkType != HUNK_RELOC32) && (hunkType != HUNK_DATA) && (hunkType != HUNK_DEBUG) && (hunkType != HUNK_END)){
-            //some Hunk I don't care about yet.... so skip over it
-            uint32_t hunkSize = READ_LONG(data, hunkPointer)*4;hunkPointer+=4;
-            hunkPointer+=hunkSize;
-            printf("hunk_ignored (%x)\n",hunkType);
-        }
-        
-
-    }
-*/
-
-    
-    
-    
     m68k_set_reg(M68K_REG_PC, (uint32_t)address);
 
 
@@ -439,7 +344,12 @@ void cpu_write_long(unsigned int address, unsigned int value){
     //Setup dos.library
     self.dosLibrary = [[EMUDos alloc]initAtAddress:DOS_BASE];
     [self.dosLibrary buildJumpTableSize:170];
-
+    [self.execLibrary addlibrary:self.dosLibrary];
+    
+    //Setup utility.library
+    self.utilityLibrary = [[EMUDos alloc]initAtAddress:UTIL_BASE];
+    [self.utilityLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.utilityLibrary];
     
     //Kick the emulation off!
     running=NO;     //but don't let it run until we have some code loaded

@@ -1,0 +1,18 @@
+//
+//  EMUMemoryBlock.h
+//  Emulatron
+//
+//  Created by Matt Parsons on 07/02/2017.
+//  Copyright © 2017 Matt Pasons. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface EMUMemoryBlock : NSObject
+
+@property (nonatomic) uint32_t address;
+@property (nonatomic) uint32_t size;
+
+-(instancetype)initWithSize:(uint32_t)size atAddress:(uint32_t)address;
+
+@end

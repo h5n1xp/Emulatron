@@ -7,6 +7,7 @@
 //
 
 #import "EMUExec.h"
+#import "EMUMemoryBlock.h"
 
 #define MEMF_ANY        0           // Any type of memory will do
 #define MEMF_PUBLIC     1
@@ -26,50 +27,58 @@
 @implementation EMUExec
 
 -(void)setupLibNode{
-   
-    WRITE_LONG(_emulatorMemory, self.base, self.base+20);       // <- Pointer to libnode structure
-    WRITE_BYTE(_emulatorMemory, self.base+4, 0);                // flags... wherever they are...
-    WRITE_BYTE(_emulatorMemory, self.base+5, 0);                // padding... does nothing
-    WRITE_WORD(_emulatorMemory, self.base+6, 1024);             // Neg size, is this suposed to be signed? size of jump table in bytes
-    WRITE_WORD(_emulatorMemory, self.base+8, 32+13+25);         // Pos size, size of data area in bytes
-    WRITE_LONG(_emulatorMemory, self.base+10, self.base+32+13); // pointer to an ID string
-    WRITE_LONG(_emulatorMemory, self.base+14, 0);               // checksum... not used right now
-    WRITE_WORD(_emulatorMemory, self.base+18, 1);               // Open count... I'm always going to start exec.library as 1
-    
-    //Data area starts as libBase + 20.. first thing here is the libnode structure :-)
-    WRITE_LONG(_emulatorMemory, self.base+20, 0xF70000);    // <- set the next node to be the dos.library...
-    WRITE_LONG(_emulatorMemory, self.base+24, 0);           // <- set the previous node to be 0
-    WRITE_LONG(_emulatorMemory, self.base+28, self.base+32);// pointer to the library name string
-    
-    //Put the strings in the data area, libBase + 32
-    uint32_t pointer=self.base+32;
-    char* name     = "exec.library";
 
-    for(int i=0;i<13;++i){
-        WRITE_BYTE(_emulatorMemory, pointer, name[i]);
-        pointer++;
-    }
+    self.libVersion  = 31; // for now... i don't actaully check it... so doesn't really matter
+    self.libRevision = 34; // as above
+    self.libOpenCount= 1;  // always a minimum of one for this library
     
-    char* IdString = "exec 31.34 (23 Nov 1985)";
-    for(int i=0;i<25;++i){
-        WRITE_BYTE(_emulatorMemory, pointer, IdString[i]);
-        pointer++;
-    }
+    uint32_t namePtr = self.libData;    //locate the data space
+    uint32_t libIDPtr = namePtr + [self writeString:"exec.library" toAddress:namePtr]; //write the name string there and generate the next free address
+    self.libName = namePtr; //write the address of the string to the libNode
+    
+    [self writeString:"exec 31.34 (23 Nov 1985) <--using old exec 1.2 ID string for now" toAddress:libIDPtr]; //write the ID string to the data area
+    self.libID = libIDPtr;  //write the address of the ID String to the lib structure.
+    
+    //char* _mem = &_emulatorMemory[self.base];
     
     //set up the memory lists
-    // All memory exisits in the emualtion ram as a long word size variable followed by the free bytes
-    //chipram, starts at 1024, and ends at 2097152. so the free chipram is top address - bottom address;
-    //the entry point is 4 bytes into the memory block.
-    WRITE_LONG(_emulatorMemory, 1024, 2097152-1024);
+    // All memory is managed outside of the actual 68k...
+    //chipram, starts at 1024, and ends at 2097151. so the free chipram is top address - bottom address;
+    self.busyChipList = [[NSMutableArray alloc] init];
     self.freeChipList = [[NSMutableArray alloc] init];
-    [self.freeChipList addObject:[NSNumber numberWithInt:1024]];
+    EMUMemoryBlock* freeChipBlock =[[EMUMemoryBlock alloc]initWithSize:(2097151 - 1024) atAddress:1024];
+    [self.freeChipList addObject:freeChipBlock];
     
-    //Now the fast ram list, hold it 4 bytes above the actual fastram base.
-    WRITE_LONG(_emulatorMemory, 2097156, 10485760 - 2097156);
+    //fastram starts at 2097152, and ends at 10485759
+    self.busyFastList = [[NSMutableArray alloc] init];
     self.freeFastList = [[NSMutableArray alloc] init];
-    [self.freeFastList addObject:[NSNumber numberWithInt:2097156]];
+    EMUMemoryBlock* freeFastBlock =[[EMUMemoryBlock alloc]initWithSize:(10485759 - 2097152) atAddress:2097152];
+    [self.freeFastList addObject:freeFastBlock];
 }
 
+-(void)addlibrary:(id)library{
+    
+    EMULibrary* newLib = library;
+    
+    //Scan the libnodes
+    
+    uint32_t nextLibNode = self.base;
+    uint32_t lastLibnode = 0;
+    
+    while(nextLibNode !=0){
+        lastLibnode = nextLibNode;
+        nextLibNode = READ_LONG(_emulatorMemory, nextLibNode);
+        
+    }
+    
+    [self instanceAtNode:lastLibnode].nextLib     = newLib.base;
+    [self instanceAtNode:newLib.base].previousLib = lastLibnode;
+
+    //char* _execmem = &_emulatorMemory[self.base];
+    //char* _dosmem = &_emulatorMemory[newLib.base];
+
+    return;
+}
 
 -(void)callFunction:(NSInteger)lvo{
     
@@ -77,13 +86,15 @@
         case   6:[self open];break;
         case  12:[self close];break;
         case  18:[self expunge];break;
-        case  22:[self reserved];break;
+        case  24:[self reserved];break;
+        case 132:[self forbid];break;
         case 180:[self cause];break;
         case 198:[self allocMem];break;
         case 210:[self freeMem];break;
         case 294:[self findTask];break;
         case 306:[self setSignal];break;
         case 414:[self closeLibrary];break;
+        case 420:[self setFunction];break;
         case 552:[self openLibrary];break;
         case 684:[self allocVec];break;
         case 690:[self freeVec];break;
@@ -92,7 +103,80 @@
     
 }
 
+//Obj-C interface
+-(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements{
+    printf("AllocMem: %d bytes, of type: %d... ",byteSize,requirements);
+    
+    byteSize +=4;               // add on 4 bytes so that this always rounds to a multiple of 4.
+    byteSize = byteSize >> 2;   // the shifts basiclly round this to a multiple of 4.
+    byteSize = byteSize << 2;
+    
+    NSMutableArray* memlist  = nil;
+    NSMutableArray* busylist = nil;
+    
+    //choose which list we want to use.
+    if((requirements & MEMF_CHIP) == MEMF_CHIP){
+        memlist  = self.freeChipList;
+        busylist = self.busyChipList;
+    }else{
+        memlist  = self.freeFastList;
+        busylist = self.busyChipList;
+    }
+    
+    EMUMemoryBlock* useBlock     = nil;
+    uint32_t useBlockSize        = 4294967295;// initilise it with a stupidly large value
+    EMUMemoryBlock* currentBlock = [memlist objectAtIndex:0];
+    uint32_t currentBlockSize    = 0;
+    NSInteger index              = 0;
+    NSInteger memListSize        = memlist.count;
+    
+    while(currentBlock != nil){
+        
+        currentBlockSize = currentBlock.size;
+        
+        if(currentBlockSize == byteSize){
 
+            [busylist addObject:currentBlock];  //Swap from free list to busy list.
+            [memlist removeObject:currentBlock];
+    
+            return currentBlock.address;
+        }
+        
+        if( (currentBlock.size>byteSize) && (currentBlockSize < useBlockSize) ){
+            useBlock     = currentBlock;
+            useBlockSize = currentBlockSize;
+        }
+        
+        index = index + 1;
+        if(index<memListSize){
+            currentBlock = [memlist objectAtIndex:index];
+        }else{
+            currentBlock=nil;
+        }
+    }
+    
+    if(useBlock==nil){
+        return 0;
+    }
+    
+    useBlock.size   = useBlockSize - byteSize;
+    uint32_t newBlockAddress = useBlock.address+(useBlockSize-byteSize);
+    
+    EMUMemoryBlock* newBlock = [[EMUMemoryBlock alloc] initWithSize:byteSize atAddress:newBlockAddress];
+    
+    [busylist addObject:newBlock];
+    
+    printf("Allocated %d bytes at %d\n",byteSize,newBlockAddress);
+    
+    return newBlockAddress;
+}
+
+
+
+// 68k Interface
+-(void)forbid{
+    printf("Forbid");
+}
 
 -(void)cause{
     printf("Interupts not enabled yet\n");
@@ -101,6 +185,11 @@
 -(void)allocMem{
     uint32_t byteSize       = m68k_get_reg(NULL, M68K_REG_D0);
     uint32_t requirements   = m68k_get_reg(NULL, M68K_REG_D1);
+    
+    m68k_set_reg(M68K_REG_D0,[self allocMem:byteSize with:requirements]);
+    
+    return;
+    
     printf("AllocMem: %d bytes, of type: %d... ",byteSize,requirements);
     
     byteSize +=8;               // add on 4 bytes to store the size value, and another 4byte so that this always rounds to a multiple of 4.
@@ -113,7 +202,7 @@
     if((requirements & MEMF_CHIP) == MEMF_CHIP){
         memlist = self.freeChipList;
     }else{
-        memlist=self.freeFastList;
+        memlist = self.freeFastList;
     }
     
     NSNumber* block=[memlist objectAtIndex:0];
@@ -181,7 +270,7 @@
         WRITE_LONG(_emulatorMemory, allocBlockAddress, byteSize);
         m68k_set_reg(M68K_REG_D0, allocBlockAddress+4);
         
-        char* mem = &_emulatorMemory[allocBlockAddress];
+        //char* mem = &_emulatorMemory[allocBlockAddress];
         printf("Allocated %d bytes at %d\n",byteSize,allocBlockAddress+4);
     }
 
@@ -209,12 +298,11 @@
         [self.freeFastList addObject:[NSNumber numberWithInt:memoryBlock]];
     }
     
-    char* mem = &_emulatorMemory[memoryBlock];
+    //char* mem = &_emulatorMemory[memoryBlock];
     printf("");
 }
 
 -(void)findTask{
-    uint32_t              A0 = m68k_get_reg(NULL, M68K_REG_A0);
     unsigned char*    taskName = &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A0)];
 
     printf("Find Task: %s\n",taskName);
@@ -227,57 +315,64 @@
 
 -(void)closeLibrary{
     uint32_t libNodePtr = m68k_get_reg(NULL,M68K_REG_A1);
-    uint32_t libNode =READ_LONG(_emulatorMemory, libNodePtr);
-    unsigned char* libNodeName =  &_emulatorMemory[READ_LONG(_emulatorMemory, libNode+8)];
-    printf("Close Library: %s\n",libNodeName);
     
-    uint32_t opncnt = READ_LONG(_emulatorMemory, libNodePtr+18);
-    opncnt -=1;
-    WRITE_LONG(_emulatorMemory, libNodePtr+18, opncnt);
+    if(libNodePtr==0){
+        return;
+    }
+    
+    [[self instanceAtNode:libNodePtr] close];
+    printf("Close Library: %s\n",[self instanceAtNode:libNodePtr].libNameString);
     
     return;
+}
+
+-(void)setFunction{
+    
+    //uint32_t library =m68k_get_reg(NULL, M68K_REG_A1);
+    //uint32_t funcOffset =m68k_get_reg(NULL, M68K_REG_A0);
+    //uint32_t newFunction =m68k_get_reg(NULL, M68K_REG_A1);
+    
+    printf("SetFunction\n");
+    // this will probably work!
 }
 
 -(void)openLibrary{
 
-    unsigned char*    libName = &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A1)]; //adding 2 bytes... not sure why...
+    const char*    libName =(const char*) &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A1)];
     uint32_t version = m68k_get_reg(NULL, M68K_REG_D0);
     printf("Open Library: %s (version v%d)\n",libName,version);
     
     //scan the libnodes for the library
-    uint32_t libNodePtr=self.base;
-    uint32_t libNode =READ_LONG(_emulatorMemory, libNodePtr);
+    uint32_t nextLibNode = self.base;
+    uint32_t currentLibNode = 0;
     
-    while(libNodePtr !=0){
-       unsigned char* libNodeName =  &_emulatorMemory[READ_LONG(_emulatorMemory, libNode+8)];
+    while(nextLibNode !=0){
+        currentLibNode = nextLibNode;
+        
+        const char* libNodeName=[self instanceAtNode:currentLibNode].libNameString;
         
         if(strcmp(libName, libNodeName)==0){
-            //Don't care about version number...
-            uint32_t opncnt = READ_LONG(_emulatorMemory, libNodePtr+18);
-            opncnt +=1;
-            WRITE_LONG(_emulatorMemory, libNodePtr+18, opncnt);
-            
+            [[self instanceAtNode:currentLibNode] open];
             break;
         }
         
-        libNodePtr = READ_LONG(_emulatorMemory, libNode);
-        libNode = READ_LONG(_emulatorMemory, libNodePtr);
+        nextLibNode = READ_LONG(_emulatorMemory, nextLibNode);
+        
     }
     
     //will return 0 if not found... only in memory libs for now...
     
-    m68k_set_reg(M68K_REG_D0, libNodePtr);
+    m68k_set_reg(M68K_REG_D0, nextLibNode);
     return;
 }
 
 -(void)allocVec{
-    printf("No Memory functions yet\n");
-    m68k_set_reg(M68K_REG_D0, 0x200000);   //some randomly high memory location,,,
+    //my allocmem does keep track of memory blocks, so AllocVec isn't needed
+    [self allocMem];
 }
 
 -(void)freeVec{
-    //my allocmem does keep track of memory blocks, so AllocVec isn't needed
-    [self allocMem];
+    [self freeMem];
 }
 
 @end

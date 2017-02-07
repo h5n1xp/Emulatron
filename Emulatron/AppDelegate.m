@@ -31,7 +31,7 @@
     [_openDlg setPrompt:@"Load ADF"];
     //[_openDlg setAllowedFileTypes:fileTypes]; <--don't need this
     
-    [self openDocument:self];
+    //[self openDocument:self];
 
     //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/matt/Library/Mobile%20Documents/com~apple~CloudDocs/Type"]];
     //[self.amiga loadFile:data toSegListAt:32];
@@ -39,9 +39,10 @@
     //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"]];
     //[self.amiga loadFile:data toSegListAt:16];
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/C/List"]]; //actaully tries to call the dos.library
-    //[self.amiga loadFile:data toSegListAt:0x400];
-
+    NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/C/List"]]; //actaully tries to call the dos.library
+    [self.amiga loadFile:data toSegListAt:0x400];
+    
+    //file:///Users/Shared/uae/540/Workbench/System/NoFastMem
 }
 
 
