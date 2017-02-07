@@ -19,5 +19,8 @@
 -(void)addlibrary:(id)library;
 
 -(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements;
+-(void)freeMem:(uint32_t)memoryBlock;
+-(void)closeLibrary:(uint32_t)libNode;
+-(uint32_t)openLibrary:(const char*)libName of:(uint32_t)version;
 
 @end

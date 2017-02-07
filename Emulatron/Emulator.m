@@ -12,7 +12,7 @@
 #include "endianMacros.h"
 
 #define ADDRESS_SPACE_SIZE 16777215 // address starts at 0, so is 1 less than 16777216 (2^24)
-#define SUPERVISOR_STACK   0xFFFFF0 // Top of reserved kickstart space.
+#define SUPERVISOR_STACK   0xBFCFFC // Top of reserved Autoconfig space... 2meg of ram I'll never use.
 #define EXEC_BASE          0xF80000 // Half way through the reserved Kickstart space.
 #define DOS_BASE           0xF70000 // 64k below exec.library
 #define UTIL_BASE          0xF60000 //
@@ -144,7 +144,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
 
 
 -(void)loadFile:(NSData*)file toSegListAt:(NSInteger)address{
-    running=NO;
+    M68KState=M68KSTATE_STOPPED;
     
     printf("\nEmulatron LoadSeg mk1:\n");
     
@@ -162,7 +162,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
     
     uint32_t totalHunks = READ_LONG(data,  8);
     uint32_t currentHunk= READ_LONG(data, 12);    //Should be zero for executable files,
-    uint32_t lastHunk   = READ_LONG(data, 16);
+    //uint32_t lastHunk   = READ_LONG(data, 16);
     uint32_t hunkLoc    = 0;
     uint32_t totalRamNeeded = 0;
     
@@ -310,11 +310,11 @@ void cpu_write_long(unsigned int address, unsigned int value){
 
 
     printf("Emulation started...!\n");
-    running=YES;
+    M68KState=M68KSTATE_RUNNING;
 }
 
 -(void)restartCPU{
-    	m68k_pulse_reset();
+    m68k_pulse_reset();
     
     //Set up the Amiga memory map, fill the first few bytes with NOPs, just to let the CPU run a few instructions.
     WRITE_WORD(_emulatorMemory, 0, 0x4E71);
@@ -330,8 +330,8 @@ void cpu_write_long(unsigned int address, unsigned int value){
     WRITE_WORD(_emulatorMemory,12, 0x4E71);
 
     //Set the Supervisor stack to the top of chipram:
-    m68k_set_reg(M68K_REG_SP, SUPERVISOR_STACK-4);
-    WRITE_LONG(_emulatorMemory, SUPERVISOR_STACK, 10); //write address 10, so the very last place the OS will jump to will halt the emulator.
+    m68k_set_reg(M68K_REG_SP, SUPERVISOR_STACK);
+    WRITE_LONG(_emulatorMemory, SUPERVISOR_STACK, 0); //write address 10, so the very last place the OS will jump to will halt the emulator.
     
     // run a few instructions to clear the pipeline.
     [self execute];
@@ -352,9 +352,10 @@ void cpu_write_long(unsigned int address, unsigned int value){
     [self.execLibrary addlibrary:self.utilityLibrary];
     
     //Kick the emulation off!
-    running=NO;     //but don't let it run until we have some code loaded
+    M68KState=M68KSTATE_STOPPED;     //but don't let it run until we have some code loaded
     self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:YES];
-
+    
+    WRITE_WORD(_emulatorMemory,0, 0x4E70); //trap execution from address 0...
 }
 
 -(void)execute{
@@ -364,30 +365,33 @@ void cpu_write_long(unsigned int address, unsigned int value){
 -(void)execute:(NSTimer*)timer{
     //called once every second by the timer
     
-    if(running==YES){
+    if(M68KState==M68KSTATE_RUNNING){
         m68k_execute((int)self.instructionsPerQuantum);
     }
 }
 
 -(void)bounce{
-    running=NO; //Pause CPU while we service the function call
+    M68KState=M68KSTATE_STOPPED; //Pause CPU while we service the function call
     
-    uint32_t a6 = m68k_get_reg(NULL, M68K_REG_A6);
+    //uint32_t a6 = m68k_get_reg(NULL, M68K_REG_A6);    //A^ is supposed to contain the lib address... but i can work it out from the pc + lvo
     uint32_t pc = m68k_get_reg(NULL, M68K_REG_PC);      //this is always one word greater than the current instruction for the jumptable.
-    uint16_t lvo =*((uint16_t*) &_emulatorMemory[pc-6]);
     
-    if(lvo==65535){
-        printf("Emulation Terminated... no more tasks to run");
+    if(pc==2){
+        printf("Emulation Terminated... no more tasks to run\n");
+        return;
     }
     
-    switch(a6){
+    uint16_t lvo =*((uint16_t*) &_emulatorMemory[pc-6]);
+    int lib = pc + lvo - 2;
+    
+    switch(lib){
         case EXEC_BASE:[self.execLibrary callFunction:lvo];break;
         case  DOS_BASE:[self.dosLibrary  callFunction:lvo];break;
     }
     
     m68k_set_reg(M68K_REG_PC, pc-4);
     
-    running=YES;
+    M68KState=M68KSTATE_RUNNING;
 }
 
 

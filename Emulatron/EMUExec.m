@@ -103,7 +103,7 @@
     
 }
 
-//Obj-C interface
+//Obj-C interface  *******************************************************************
 -(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements{
     printf("AllocMem: %d bytes, of type: %d... ",byteSize,requirements);
     
@@ -195,13 +195,52 @@
         currentBlock =[busylist objectAtIndex:index];
     }
     
+    printf("freeMem: %d bytes at %d\n",currentBlock.size,memoryBlock);
     
     [memlist  addObject:currentBlock];  //Swap from busy list to free list.
     [busylist removeObject:currentBlock];
 
 }
 
-// 68k Interface
+-(void)closeLibrary:(uint32_t)libNode{
+    
+    if(libNode==0){
+        return;
+    }
+    
+    [[self instanceAtNode:libNode] close];
+    printf("Close Library: %s\n",[self instanceAtNode:libNode].libNameString);
+}
+
+-(uint32_t)openLibrary:(const char*)libName of:(uint32_t)version{
+    
+    printf("Open Library: %s (version v%d)\n",libName,version);
+    
+    //scan the libnodes for the library
+    uint32_t nextLibNode = self.base;
+    uint32_t currentLibNode = 0;
+    
+    while(nextLibNode !=0){
+        currentLibNode = nextLibNode;
+        
+        const char* libNodeName=[self instanceAtNode:currentLibNode].libNameString;
+        
+        if(strcmp(libName, libNodeName)==0){
+            [[self instanceAtNode:currentLibNode] open];
+            break;
+        }
+        
+        nextLibNode = READ_LONG(_emulatorMemory, nextLibNode);
+        
+    }
+    
+    //will return 0 if not found... only in memory libs for now...
+    
+    return nextLibNode;
+}
+
+
+// 68k Interface *******************************************************************
 -(void)forbid{
     printf("Forbid");
 }
@@ -220,29 +259,11 @@
 }
 
 -(void)freeMem{
-    uint32_t memoryBlock = m68k_get_reg(NULL, M68K_REG_A1) - 4;
-    uint32_t byteSize    = m68k_get_reg(NULL, M68K_REG_D0); //but this is not needed as we keep track of allocations
+    uint32_t memoryBlock = m68k_get_reg(NULL, M68K_REG_A1);
+    uint32_t byteSize    = m68k_get_reg(NULL, M68K_REG_D0); //This is not needed as we keep track of allocations
     
-    //just in case something has walked allover our memory tracking system clean it up.
-    byteSize +=8;               // add on 4 bytes to store the size value, and another 4byte so that this always rounds to a multiple of 4.
-    byteSize = byteSize >> 2;   // the shifts basiclly round this to a multiple of 4.
-    byteSize = byteSize << 2;
-    
-    printf("freeMem: %d bytes at %d\n",byteSize,memoryBlock);
-    
-    WRITE_LONG(_emulatorMemory, memoryBlock, byteSize);
-    
-
-    //if the memory block is under the 2meg limit... it's chip ram.
-    if(memoryBlock<2097152){
-        [self.freeChipList addObject:[NSNumber numberWithInt:memoryBlock]];
-    }else{
-        [self.freeFastList addObject:[NSNumber numberWithInt:memoryBlock]];
-    }
-    
-    //char* mem = &_emulatorMemory[memoryBlock];
-    printf("");
-}
+    [self freeMem:memoryBlock];
+ }
 
 -(void)findTask{
     unsigned char*    taskName = &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A0)];
@@ -255,17 +276,14 @@
     printf("SetSignal... not implemented\n");
 }
 
+
+
+
 -(void)closeLibrary{
-    uint32_t libNodePtr = m68k_get_reg(NULL,M68K_REG_A1);
+    uint32_t libNode = m68k_get_reg(NULL,M68K_REG_A1);
     
-    if(libNodePtr==0){
-        return;
-    }
-    
-    [[self instanceAtNode:libNodePtr] close];
-    printf("Close Library: %s\n",[self instanceAtNode:libNodePtr].libNameString);
-    
-    return;
+    [self closeLibrary:libNode];
+
 }
 
 -(void)setFunction{
@@ -278,10 +296,17 @@
     // this will probably work!
 }
 
+
+
 -(void)openLibrary{
 
-    const char*    libName =(const char*) &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A1)];
+    const char* libName =(const char*) &_emulatorMemory[m68k_get_reg(NULL, M68K_REG_A1)];
     uint32_t version = m68k_get_reg(NULL, M68K_REG_D0);
+    
+    m68k_set_reg(M68K_REG_D0,[self openLibrary:libName of:version]);
+    
+    return;
+    
     printf("Open Library: %s (version v%d)\n",libName,version);
     
     //scan the libnodes for the library
@@ -309,7 +334,7 @@
 }
 
 -(void)allocVec{
-    //my allocmem does keep track of memory blocks, so AllocVec isn't needed
+    //my allocmem does keep track of memory blocks, so AllocVec isn't needed anymore
     [self allocMem];
 }
 

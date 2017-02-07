@@ -10,9 +10,14 @@
 #import "EMUExec.h"
 #import "EMUDos.h"
 
+#define M68KSTATE_STOPPED   0
+#define M68KSTATE_THROTTLED 5
+#define M68KSTATE_RUNNING   10
+
+
 @interface Emulator : NSObject{
     
-    BOOL running;
+    NSInteger M68KState;
     
 };
 

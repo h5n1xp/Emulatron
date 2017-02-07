@@ -86,9 +86,14 @@
 
 -(void)readArgs{
     
-    uint32_t template = m68k_get_reg(NULL, M68K_REG_D0);
-    uint32_t array = m68k_get_reg(NULL, M68K_REG_D1);
-    uint32_t args = m68k_get_reg(NULL, M68K_REG_D2);
+    uint32_t templatePtr  = m68k_get_reg(NULL, M68K_REG_D1);
+    uint32_t arrayPtr     = m68k_get_reg(NULL, M68K_REG_D2);
+    uint32_t argsPtr      = m68k_get_reg(NULL, M68K_REG_D3);
+    
+    char* array = &_emulatorMemory[arrayPtr];
+    unsigned char* template = &_emulatorMemory[templatePtr];
+    
+    printf("%s",template);
     
     //Don't know how to service this so put 0 for failure
     m68k_set_reg(M68K_REG_D0, 0);
