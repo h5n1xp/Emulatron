@@ -172,6 +172,34 @@
 }
 
 
+-(void)freeMem:(uint32_t)memoryBlock{
+    
+    NSMutableArray* memlist  = nil;
+    NSMutableArray* busylist = nil;
+    
+    //choose which list we want to use.
+    if(memoryBlock<2097152){
+        memlist  = self.freeChipList;
+        busylist = self.busyChipList;
+    }else{
+        memlist  = self.freeFastList;
+        busylist = self.busyChipList;
+    }
+    
+    //We need to scan the busy list to find the allocated object...
+    EMUMemoryBlock* currentBlock=[busylist objectAtIndex:0];
+    int index=0;
+    
+    while(currentBlock.address !=memoryBlock){
+        index +=1;
+        currentBlock =[busylist objectAtIndex:index];
+    }
+    
+    
+    [memlist  addObject:currentBlock];  //Swap from busy list to free list.
+    [busylist removeObject:currentBlock];
+
+}
 
 // 68k Interface
 -(void)forbid{
@@ -189,92 +217,6 @@
     m68k_set_reg(M68K_REG_D0,[self allocMem:byteSize with:requirements]);
     
     return;
-    
-    printf("AllocMem: %d bytes, of type: %d... ",byteSize,requirements);
-    
-    byteSize +=8;               // add on 4 bytes to store the size value, and another 4byte so that this always rounds to a multiple of 4.
-    byteSize = byteSize >> 2;   // the shifts basiclly round this to a multiple of 4.
-    byteSize = byteSize << 2;
-    
-    NSMutableArray* memlist=nil;
-    
-    //choose which list we want to use.
-    if((requirements & MEMF_CHIP) == MEMF_CHIP){
-        memlist = self.freeChipList;
-    }else{
-        memlist = self.freeFastList;
-    }
-    
-    NSNumber* block=[memlist objectAtIndex:0];
-    NSInteger index =0;
-    uint32_t goodBlockAddress=0;
-    uint32_t goodBlockSize=4294967295;// initilise it with a stupidly large value
-    NSInteger goodblockIndex = 0;
-    
-    
-    while(block !=nil){
-        
-        uint32_t address = (uint32_t) [block integerValue];
-        uint32_t size = READ_LONG(_emulatorMemory, address);
-        
-        //if the freeblock is the correct size... just use it.
-        if(size == byteSize){
-            goodBlockAddress = address;
-            goodBlockSize    = size;
-            goodblockIndex   = index;
-            break;
-        }
-        
-        //this block is big enough and smaller than the last big enough block... so it becomes the new good block
-        if((size > byteSize) && (size<goodBlockSize)){
-            goodBlockAddress = address;
-            goodBlockSize = size;
-            goodblockIndex   = index;
-        }
-        
-        index +=1;
-        if(index >= memlist.count){
-            block=nil;
-        }else{
-            block=[memlist objectAtIndex:index];
-        }
-    };
-    
-    if(goodBlockAddress==0){
-        printf("Not enough free memory\n");
-        m68k_set_reg(M68K_REG_D0, 0);
-        return;
-    }
-    
-    if(goodBlockSize==byteSize){
-        //nothing more to do!
-        m68k_set_reg(M68K_REG_D0, goodBlockAddress+4); //the calling program doens't need to know the size pointer before the data block
-        [memlist removeObjectAtIndex:goodblockIndex];
-    }
-    
-    
-    if(goodBlockSize>byteSize){
-        //now we need to split the memory block....
-        uint32_t freeblockSize = goodBlockSize-byteSize;
-        
-        if(freeblockSize < 8){
-            //the new free block is going to be smaller than 8 bytes, don't bother
-            m68k_set_reg(M68K_REG_D0, goodBlockAddress+4);
-            [memlist removeObjectAtIndex:goodblockIndex];
-        }
-        
-
-        WRITE_LONG(_emulatorMemory, goodBlockAddress, freeblockSize); // the old memory block is now shrunk by the required block size.
-        
-        uint32_t allocBlockAddress = goodBlockAddress + freeblockSize;
-        WRITE_LONG(_emulatorMemory, allocBlockAddress, byteSize);
-        m68k_set_reg(M68K_REG_D0, allocBlockAddress+4);
-        
-        //char* mem = &_emulatorMemory[allocBlockAddress];
-        printf("Allocated %d bytes at %d\n",byteSize,allocBlockAddress+4);
-    }
-
-
 }
 
 -(void)freeMem{
