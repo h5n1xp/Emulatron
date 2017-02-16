@@ -6,9 +6,9 @@
 //  Copyright © 2017 Matt Pasons. All rights reserved.
 //
 
-#import "EMULibrary.h"
+#import "EMULibBase.h"
 
-@interface EMUExec : EMULibrary
+@interface EMUExec : EMULibBase
 
 @property (nonatomic,strong) NSMutableArray* freeFastList;
 @property (nonatomic,strong) NSMutableArray* freeChipList;
@@ -17,6 +17,10 @@
 @property (nonatomic,strong) NSMutableArray* busyChipList;
 
 -(void)addlibrary:(id)library;
+
+-(uint32_t)thisTask;
+-(void)setThisTask:(uint32_t)address;
+
 
 -(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements;
 -(void)freeMem:(uint32_t)memoryBlock;

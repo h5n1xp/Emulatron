@@ -7,11 +7,14 @@
 //
 
 #import "AppDelegate.h"
+#import "EMUConsoleView.h"
 
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NSWindow *window;
+@property (weak) IBOutlet EMUConsoleView *debugOutput;
 @property (nonatomic,strong) NSOpenPanel* openDlg;
+
 
 @end
 
@@ -28,21 +31,34 @@
     [_openDlg setCanChooseDirectories:NO];
     [_openDlg setCanChooseFiles:YES];
     [_openDlg setFloatingPanel:YES];
-    [_openDlg setPrompt:@"Load ADF"];
+    [_openDlg setPrompt:@"Load Program"];
     //[_openDlg setAllowedFileTypes:fileTypes]; <--don't need this
     
-    //[self openDocument:self];
 
-    NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/matt/Library/Mobile%20Documents/com~apple~CloudDocs/Type"]];
-    [self.amiga loadFile:data toSegListAt:32];
+    //setup debug console
+    self.amiga.debugOutput = self.debugOutput;
+
+    //[self openDocument:self];
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"]];
-    //[self.amiga loadFile:data toSegListAt:16];
+    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/matt/Library/Mobile%20Documents/com~apple~CloudDocs/Type"]];
+    //[self.amiga loadFile:data toSegListAt:32];
+    
+    NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"]];
+    [self.amiga loadFile:data toSegListAt:16];
     
     //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/C/List"]];
     //[self.amiga loadFile:data toSegListAt:0x400];
     
-    //file:///Users/Shared/uae/540/Workbench/System/NoFastMem
+    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/System/NoFastMem"]];
+    //[self.amiga loadFile:data toSegListAt:0x400];
+    
+    // NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/Utilities/Clock"]];
+    //[self.amiga loadFile:data toSegListAt:0x400];
+    
+    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/Sysinfo/SysInfo"]];
+    //[self.amiga loadFile:data toSegListAt:0x400];
+    
+    //
 }
 
 
@@ -62,7 +78,7 @@
              NSURL* file = [self.openDlg URL];
              printf("%s",[[file absoluteString] UTF8String]);
              NSData* data  =[NSData dataWithContentsOfURL:file];
-             [self.amiga loadFile:data toSegListAt:8];          //<--8 is the first executable address on an amiga... but is in the exception table
+             [self.amiga loadFile:data toSegListAt:1024];          // <-- bottom of chipram is the first executable address on an amiga...
              
          }
          

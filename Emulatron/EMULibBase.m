@@ -1,14 +1,14 @@
 //
-//  EMULibrary.m
+//  EMULibBase.m
 //  Emulatron
 //
-//  Created by Matt Parsons on 03/02/2017.
+//  Created by Matt Parsons on 16/02/2017.
 //  Copyright © 2017 Matt Pasons. All rights reserved.
 //
 
-#import "EMULibrary.h"
+#import "EMULibBase.h"
 
-@implementation EMULibrary
+@implementation EMULibBase
 
 -(instancetype)initAtAddress:(uint32_t)address{
     self = [super init];
@@ -69,7 +69,7 @@
     //Stub to be completed by the library writer
 }
 
--(EMULibrary*)instanceAtNode:(uint32)address{
+-(EMULibBase*)instanceAtNode:(uint32)address{
     
     if(READ_BYTE(_emulatorMemory, self.base+15)==0){
         return nil;                                     //if flag is 0, then this library has no Obj-C interface.
@@ -81,24 +81,24 @@
 }
 
 /* These functions predate the proper list handeling functions
--(uint32_t)node{
-    return self.base;
-}
-
--(uint32_t)nextLib{
-    return READ_LONG(_emulatorMemory, self.base);
-}
--(void)setNextLib:(uint32_t)address{
-    WRITE_LONG(_emulatorMemory, self.base, address);
-}
-
--(uint32_t)previousLib{
-    return READ_LONG(_emulatorMemory, self.base+4);
-}
--(void)setPreviousLib:(uint32_t)address{
-    WRITE_LONG(_emulatorMemory, self.base+4, address);
-}
-*/
+ -(uint32_t)node{
+ return self.base;
+ }
+ 
+ -(uint32_t)nextLib{
+ return READ_LONG(_emulatorMemory, self.base);
+ }
+ -(void)setNextLib:(uint32_t)address{
+ WRITE_LONG(_emulatorMemory, self.base, address);
+ }
+ 
+ -(uint32_t)previousLib{
+ return READ_LONG(_emulatorMemory, self.base+4);
+ }
+ -(void)setPreviousLib:(uint32_t)address{
+ WRITE_LONG(_emulatorMemory, self.base+4, address);
+ }
+ */
 
 
 -(uint32_t)libName{

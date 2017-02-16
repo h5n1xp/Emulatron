@@ -1,8 +1,8 @@
 //
-//  EMULibrary.h
+//  EMULibBase.h
 //  Emulatron
 //
-//  Created by Matt Parsons on 03/02/2017.
+//  Created by Matt Parsons on 16/02/2017.
 //  Copyright © 2017 Matt Pasons. All rights reserved.
 //
 
@@ -10,9 +10,11 @@
 #include "m68k.h"
 #include "endianMacros.h"
 
+
+
 #define INSTANCE_ADDRESS 2040   //the number of bytes below the libBase where the instance address can be found.
 
-@interface EMULibrary : NSObject
+@interface EMULibBase : NSObject
 
 @property (nonatomic, weak) NSMutableString* debugOutput;
 
@@ -23,22 +25,13 @@
 -(instancetype)initAtAddress:(uint32_t)address;
 -(void)buildJumpTableSize:(NSInteger)lvocount;
 
--(EMULibrary*)instanceAtNode:(uint32)address;
-
-/* These functions predate the proper list handeling functions
--(uint32_t)node;
--(uint32_t)nextLib;
--(void)setNextLib:(uint32_t)address;
--(uint32_t)previousLib;
--(void)setPreviousLib:(uint32_t)address;
-*/
-
+-(EMULibBase*)instanceAtNode:(uint32)address;
 
 //object Properties
 -(uint32_t)libName;
 -(void)setLibName:(uint32_t)address;
 -(const char*)libNameString;
-    
+
 -(uint32_t)libVersion;
 -(void)setLibVersion:(uint32_t)value;
 
@@ -62,4 +55,5 @@
 -(void)expunge;
 -(void)reserved;
 -(void)unimplemented:(NSInteger)lvo;
+
 @end

@@ -8,9 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */ = {isa = PBXBuildFile; fileRef = C91BFA0D1E46149F00864200 /* EMUDos.m */; };
+		C93802A11E4CED2300D1F35B /* EMUExpansion.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802A01E4CED2300D1F35B /* EMUExpansion.m */; };
+		C93802A41E4DD14D00D1F35B /* EMUUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802A31E4DD14D00D1F35B /* EMUUtility.m */; };
+		C93802A81E55D36E00D1F35B /* EMUConsoleView.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802A71E55D36E00D1F35B /* EMUConsoleView.m */; };
+		C93802AB1E55E17200D1F35B /* EMULibBase.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802AA1E55E17200D1F35B /* EMULibBase.m */; };
+		C950058D1E4B67B400182F6F /* EMUGraphics.m in Sources */ = {isa = PBXBuildFile; fileRef = C950058C1E4B67B400182F6F /* EMUGraphics.m */; };
 		C96E1AB01E4A121A007B85EF /* EMUMemoryBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */; };
 		C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6551E4541A600DBF0F8 /* EMUExec.m */; };
 		C974B6591E4541DF00DBF0F8 /* EMULibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = C974B6581E4541DF00DBF0F8 /* EMULibrary.m */; };
+		C9BC020C1E4BD2D200C90BB9 /* EMUIntuition.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC020B1E4BD2D200C90BB9 /* EMUIntuition.m */; };
+		C9BC020F1E4BD4E900C90BB9 /* EMUIcon.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC020E1E4BD4E900C90BB9 /* EMUIcon.m */; };
+		C9BC02121E4BD5E400C90BB9 /* EMULayers.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC02111E4BD5E400C90BB9 /* EMULayers.m */; };
+		C9BC02151E4BD70900C90BB9 /* EMUGadtools.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC02141E4BD70900C90BB9 /* EMUGadtools.m */; };
+		C9BC02181E4BD82C00C90BB9 /* EMUDiskfont.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC02171E4BD82C00C90BB9 /* EMUDiskfont.m */; };
+		C9BC021B1E4BDCFD00C90BB9 /* EMUMathffp.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC021A1E4BDCFD00C90BB9 /* EMUMathffp.m */; };
+		C9BC021E1E4BDE0500C90BB9 /* EMUMathtrans.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BC021D1E4BDE0500C90BB9 /* EMUMathtrans.m */; };
 		C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */; };
 		C9C4CB8E1E43BA460052AD45 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CB8D1E43BA460052AD45 /* main.m */; };
 		C9C4CB901E43BA460052AD45 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */; };
@@ -28,12 +40,36 @@
 /* Begin PBXFileReference section */
 		C91BFA0C1E46149F00864200 /* EMUDos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUDos.h; sourceTree = "<group>"; };
 		C91BFA0D1E46149F00864200 /* EMUDos.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUDos.m; sourceTree = "<group>"; };
+		C938029F1E4CED2300D1F35B /* EMUExpansion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUExpansion.h; sourceTree = "<group>"; };
+		C93802A01E4CED2300D1F35B /* EMUExpansion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUExpansion.m; sourceTree = "<group>"; };
+		C93802A21E4DD14D00D1F35B /* EMUUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUUtility.h; sourceTree = "<group>"; };
+		C93802A31E4DD14D00D1F35B /* EMUUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUUtility.m; sourceTree = "<group>"; };
+		C93802A61E55D36E00D1F35B /* EMUConsoleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUConsoleView.h; sourceTree = "<group>"; };
+		C93802A71E55D36E00D1F35B /* EMUConsoleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUConsoleView.m; sourceTree = "<group>"; };
+		C93802A91E55E17200D1F35B /* EMULibBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMULibBase.h; sourceTree = "<group>"; };
+		C93802AA1E55E17200D1F35B /* EMULibBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMULibBase.m; sourceTree = "<group>"; };
+		C950058B1E4B67B400182F6F /* EMUGraphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUGraphics.h; sourceTree = "<group>"; };
+		C950058C1E4B67B400182F6F /* EMUGraphics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUGraphics.m; sourceTree = "<group>"; };
 		C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUMemoryBlock.h; sourceTree = "<group>"; };
 		C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUMemoryBlock.m; sourceTree = "<group>"; };
 		C974B6541E4541A600DBF0F8 /* EMUExec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUExec.h; sourceTree = "<group>"; };
 		C974B6551E4541A600DBF0F8 /* EMUExec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUExec.m; sourceTree = "<group>"; };
 		C974B6571E4541DF00DBF0F8 /* EMULibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMULibrary.h; sourceTree = "<group>"; };
 		C974B6581E4541DF00DBF0F8 /* EMULibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMULibrary.m; sourceTree = "<group>"; };
+		C9BC020A1E4BD2D200C90BB9 /* EMUIntuition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUIntuition.h; sourceTree = "<group>"; };
+		C9BC020B1E4BD2D200C90BB9 /* EMUIntuition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUIntuition.m; sourceTree = "<group>"; };
+		C9BC020D1E4BD4E900C90BB9 /* EMUIcon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUIcon.h; sourceTree = "<group>"; };
+		C9BC020E1E4BD4E900C90BB9 /* EMUIcon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUIcon.m; sourceTree = "<group>"; };
+		C9BC02101E4BD5E400C90BB9 /* EMULayers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMULayers.h; sourceTree = "<group>"; };
+		C9BC02111E4BD5E400C90BB9 /* EMULayers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMULayers.m; sourceTree = "<group>"; };
+		C9BC02131E4BD70900C90BB9 /* EMUGadtools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUGadtools.h; sourceTree = "<group>"; };
+		C9BC02141E4BD70900C90BB9 /* EMUGadtools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUGadtools.m; sourceTree = "<group>"; };
+		C9BC02161E4BD82C00C90BB9 /* EMUDiskfont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUDiskfont.h; sourceTree = "<group>"; };
+		C9BC02171E4BD82C00C90BB9 /* EMUDiskfont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUDiskfont.m; sourceTree = "<group>"; };
+		C9BC02191E4BDCFD00C90BB9 /* EMUMathffp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUMathffp.h; sourceTree = "<group>"; };
+		C9BC021A1E4BDCFD00C90BB9 /* EMUMathffp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUMathffp.m; sourceTree = "<group>"; };
+		C9BC021C1E4BDE0500C90BB9 /* EMUMathtrans.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUMathtrans.h; sourceTree = "<group>"; };
+		C9BC021D1E4BDE0500C90BB9 /* EMUMathtrans.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUMathtrans.m; sourceTree = "<group>"; };
 		C9C4CB861E43BA460052AD45 /* Emulatron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Emulatron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9C4CB891E43BA460052AD45 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -69,6 +105,43 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C93802A51E549D2300D1F35B /* Emulated Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */,
+				C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */,
+				C93802A91E55E17200D1F35B /* EMULibBase.h */,
+				C93802AA1E55E17200D1F35B /* EMULibBase.m */,
+				C974B6571E4541DF00DBF0F8 /* EMULibrary.h */,
+				C974B6581E4541DF00DBF0F8 /* EMULibrary.m */,
+				C974B6541E4541A600DBF0F8 /* EMUExec.h */,
+				C974B6551E4541A600DBF0F8 /* EMUExec.m */,
+				C91BFA0C1E46149F00864200 /* EMUDos.h */,
+				C91BFA0D1E46149F00864200 /* EMUDos.m */,
+				C950058B1E4B67B400182F6F /* EMUGraphics.h */,
+				C950058C1E4B67B400182F6F /* EMUGraphics.m */,
+				C9BC020A1E4BD2D200C90BB9 /* EMUIntuition.h */,
+				C9BC020B1E4BD2D200C90BB9 /* EMUIntuition.m */,
+				C93802A21E4DD14D00D1F35B /* EMUUtility.h */,
+				C93802A31E4DD14D00D1F35B /* EMUUtility.m */,
+				C9BC020D1E4BD4E900C90BB9 /* EMUIcon.h */,
+				C9BC020E1E4BD4E900C90BB9 /* EMUIcon.m */,
+				C9BC02101E4BD5E400C90BB9 /* EMULayers.h */,
+				C9BC02111E4BD5E400C90BB9 /* EMULayers.m */,
+				C9BC02131E4BD70900C90BB9 /* EMUGadtools.h */,
+				C9BC02141E4BD70900C90BB9 /* EMUGadtools.m */,
+				C9BC02161E4BD82C00C90BB9 /* EMUDiskfont.h */,
+				C9BC02171E4BD82C00C90BB9 /* EMUDiskfont.m */,
+				C9BC02191E4BDCFD00C90BB9 /* EMUMathffp.h */,
+				C9BC021A1E4BDCFD00C90BB9 /* EMUMathffp.m */,
+				C9BC021C1E4BDE0500C90BB9 /* EMUMathtrans.h */,
+				C9BC021D1E4BDE0500C90BB9 /* EMUMathtrans.m */,
+				C938029F1E4CED2300D1F35B /* EMUExpansion.h */,
+				C93802A01E4CED2300D1F35B /* EMUExpansion.m */,
+			);
+			name = "Emulated Libraries";
+			sourceTree = "<group>";
+		};
 		C9C4CB7D1E43BA460052AD45 = {
 			isa = PBXGroup;
 			children = (
@@ -89,25 +162,20 @@
 			isa = PBXGroup;
 			children = (
 				C9C4CB9A1E43BAC50052AD45 /* Musashi */,
+				C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */,
 				C9C4CBA91E43BDCD0052AD45 /* sim.h */,
 				C9C4CBB51E43C5F70052AD45 /* sim.c */,
 				C9C4CBA61E43BBA50052AD45 /* Emulator.h */,
 				C9C4CBA71E43BBA50052AD45 /* Emulator.m */,
-				C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */,
+				C93802A61E55D36E00D1F35B /* EMUConsoleView.h */,
+				C93802A71E55D36E00D1F35B /* EMUConsoleView.m */,
 				C9C4CB891E43BA460052AD45 /* AppDelegate.h */,
 				C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */,
 				C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */,
 				C9C4CB911E43BA460052AD45 /* MainMenu.xib */,
 				C9C4CB941E43BA460052AD45 /* Info.plist */,
 				C9C4CB8C1E43BA460052AD45 /* Supporting Files */,
-				C974B6571E4541DF00DBF0F8 /* EMULibrary.h */,
-				C974B6581E4541DF00DBF0F8 /* EMULibrary.m */,
-				C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */,
-				C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */,
-				C974B6541E4541A600DBF0F8 /* EMUExec.h */,
-				C974B6551E4541A600DBF0F8 /* EMUExec.m */,
-				C91BFA0C1E46149F00864200 /* EMUDos.h */,
-				C91BFA0D1E46149F00864200 /* EMUDos.m */,
+				C93802A51E549D2300D1F35B /* Emulated Libraries */,
 			);
 			path = Emulatron;
 			sourceTree = "<group>";
@@ -208,19 +276,31 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C93802A81E55D36E00D1F35B /* EMUConsoleView.m in Sources */,
 				C9C4CBB21E43C4CD0052AD45 /* m68kopac.c in Sources */,
+				C93802AB1E55E17200D1F35B /* EMULibBase.m in Sources */,
 				C9C4CBB31E43C4CD0052AD45 /* m68kopdm.c in Sources */,
 				C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */,
+				C9BC020C1E4BD2D200C90BB9 /* EMUIntuition.m in Sources */,
 				C9C4CB9F1E43BAF90052AD45 /* m68kcpu.c in Sources */,
 				C9C4CB8E1E43BA460052AD45 /* main.m in Sources */,
+				C9BC021E1E4BDE0500C90BB9 /* EMUMathtrans.m in Sources */,
+				C950058D1E4B67B400182F6F /* EMUGraphics.m in Sources */,
+				C9BC021B1E4BDCFD00C90BB9 /* EMUMathffp.m in Sources */,
 				C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */,
+				C93802A41E4DD14D00D1F35B /* EMUUtility.m in Sources */,
 				C9C4CBAE1E43C4B20052AD45 /* m68kops.c in Sources */,
 				C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */,
 				C96E1AB01E4A121A007B85EF /* EMUMemoryBlock.m in Sources */,
 				C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */,
 				C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */,
+				C9BC02181E4BD82C00C90BB9 /* EMUDiskfont.m in Sources */,
+				C9BC02151E4BD70900C90BB9 /* EMUGadtools.m in Sources */,
+				C9BC02121E4BD5E400C90BB9 /* EMULayers.m in Sources */,
 				C9C4CBA81E43BBA50052AD45 /* Emulator.m in Sources */,
 				C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */,
+				C9BC020F1E4BD4E900C90BB9 /* EMUIcon.m in Sources */,
+				C93802A11E4CED2300D1F35B /* EMUExpansion.m in Sources */,
 				C974B6591E4541DF00DBF0F8 /* EMULibrary.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

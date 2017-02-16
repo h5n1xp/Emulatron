@@ -12,6 +12,9 @@
 
 @property (nonatomic) uint32_t address;
 @property (nonatomic) uint32_t size;
+@property (nonatomic) uint32_t attributes;
+@property (nonatomic) uint32_t owner;
+@property (nonatomic) unsigned char* physicalAddress;
 
 -(instancetype)initWithSize:(uint32_t)size atAddress:(uint32_t)address;
 

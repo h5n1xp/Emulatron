@@ -13,7 +13,7 @@
 
 -(void)setupLibNode{
     
-    self.libVersion  = 33; // for now... i don't actaully check it... so doesn't really matter
+    self.libVersion  = 37; // for now... i don't actaully check it... so doesn't really matter
     self.libRevision = 34; // as above
     self.libOpenCount= 1;  // always a minimum of one for this library, as we alwasy need to access the drives.
     
@@ -21,7 +21,7 @@
     uint32_t libIDPtr = namePtr + [self writeString:"dos.library" toAddress:namePtr]; //write the name string there and generate the next free address
     self.libName = namePtr; //write the address of the string to the libNode
     
-    [self writeString:"dos 31.34 (04 Feb 2017)" toAddress:libIDPtr]; //write the ID string to the data area
+    [self writeString:"dos 37.34 (04 Feb 2017)" toAddress:libIDPtr]; //write the ID string to the data area
     self.libID = libIDPtr;  //write the address of the ID String to the lib structure.
     
 }

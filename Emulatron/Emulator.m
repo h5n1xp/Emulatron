@@ -13,9 +13,18 @@
 
 #define ADDRESS_SPACE_SIZE 16777215 // address starts at 0, so is 1 less than 16777216 (2^24)
 #define SUPERVISOR_STACK   0xBFCFFC // Top of reserved Autoconfig space... 2meg of ram I'll never use.
-#define EXEC_BASE          0xF80000 // Half way through the reserved Kickstart space.
-#define DOS_BASE           0xF70000 // 64k below exec.library
-#define UTIL_BASE          0xF60000 //
+#define EXEC_BASE          0xFFF800 // 2Kb below the top of the reserved Kickstart space.
+#define DOS_BASE           0xFFE800 // 4k below exec.library
+#define GFX_BASE           0xFFD800 // 4k below :-)
+#define INTUI_BASE         0xFFC800 // 4k below
+#define ICON_BASE          0xFFB800 // 4K below
+#define LAYER_BASE         0xFFA800 // 4K below
+#define UTIL_BASE          0xFF9800 // 4K below
+#define GADTOOL_BASE       0xFF8800 // 4K below
+#define DISKFONT_BASE      0xFF7800 // 4k below
+#define MATHFFP_BASE       0xEF6800 // 4K below
+#define MATHTRANS_BASE     0xEF5800 // 4K below
+#define EXPANSION_BASE     0xEF4800 // 4K below
 
 //Load Seg defines... probably shouldn't be in this object... should be in EMUDos
 #define HUNK_UNIT           0999
@@ -42,7 +51,9 @@ id       _emualtorInstance;
 
 /* Called when the CPU pulses the RESET line */
 void cpu_pulse_reset(void){
+    
     [_emualtorInstance bounce];
+
 }
 
 
@@ -70,12 +81,6 @@ unsigned int cpu_read_word(unsigned int address){
 
 
 unsigned int cpu_read_long(unsigned int address) {
-    
-    /*
-    if(address==4){
-        printf("Exec.library address loaded\n");
-    }
-    */
     
     if(address > ADDRESS_SPACE_SIZE){
         printf("Attempted to read long from RAM address %08x", address);
@@ -146,17 +151,17 @@ void cpu_write_long(unsigned int address, unsigned int value){
 -(void)loadFile:(NSData*)file toSegListAt:(NSInteger)address{
     M68KState=M68KSTATE_STOPPED;
     
-    printf("\nEmulatron LoadSeg mk1:\n");
+    self.debugOutput.cout =@"\nEmulatron LoadSeg mk1:\n";
     
     uint8_t* data =(uint8_t*)file.bytes;
     
     if(READ_LONG(data, 0) != HUNK_HEADER){
-        printf("File is not executable\n");
+         self.debugOutput.cout =@"File is not executable\n";
         return;
     }
     
     if(READ_LONG(data, 4) != 0x0){
-        printf("File corrupt\n");
+         self.debugOutput.cout =@"File corrupt\n";
         return;
     }
     
@@ -168,31 +173,39 @@ void cpu_write_long(unsigned int address, unsigned int value){
     
     uint32 hunkPointer = 20;
     //allocate ram for each hunk
-    printf("Hunk Table [%d]\n",totalHunks);
+    self.debugOutput.cout =[NSString stringWithFormat:@"Hunk Table [%d]\n",totalHunks];
     uint32_t hunkAddress[totalHunks]; //an array which points to the memory address of each memory hunk.
-                              //this code currently just loads the hunks in sequentially, since we have so much ram... but really I sould exec.library alloc memory for each one.
+    
     for(int i=0;i<totalHunks;++i){
         
-        hunkAddress[i]=(uint32_t)address+hunkLoc;
         uint32_t RAMType = (READ_LONG(data, hunkPointer)   & 0xC0000000) >> 30;
+        uint32_t RAMTag = 0;
+        switch (RAMType) {
+            case 0:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: fast ram (prefered) or chip ram at ",i];RAMTag=4;break;
+            case 1:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: chip ram or fail at ",i];RAMTag=2;break;
+            case 2:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: fast ram or fail at ",i];RAMTag=4;break;
+            case 3:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: some ram tag I don't know! at ",i];break;
+        }
         uint32_t RAMSize = (READ_LONG(data, hunkPointer)*4)& 0x3FFFFFFF;hunkPointer+=4;
+        
+        hunkAddress[i]=[self.execLibrary allocMem:RAMSize with:RAMTag];  //all allocated in Fast Ram for now :(
         
         totalRamNeeded+=RAMSize;
         
         hunkLoc = hunkLoc + RAMSize + 4; //(put a 4 byte between hunks to keep them apart)
         
-        printf("0x%X: hunk %d (%d bytes) in ",hunkAddress[i],i,RAMSize);
+         self.debugOutput.cout =[NSString stringWithFormat:@"0x%X (%d bytes)\n",hunkAddress[i],RAMSize];
         
-        switch (RAMType) {
-            case 0: printf("fast ram (prefered) or chip ram\n");break;
-            case 1: printf("chip ram or fail\n");break;
-            case 2: printf("fast ram or fail\n");break;
-            case 3: printf("some ram tag I don't know!\n");break;
-        }
+
         
     }
-    printf("total Ram needed:%d\n\n",totalRamNeeded);
+    self.debugOutput.cout =[NSString stringWithFormat:@"\ntotal Ram needed:%d\n\n",totalRamNeeded];
     
+    //build a task structure for exec
+    uint32_t taskStructure = [self.execLibrary allocMem:128 with:4];
+    uint32_t taskStack     = [self.execLibrary allocMem:4096 with:4];
+    
+    printf("Stack and task control block\n\n");
     
     // Hunk header read, now time to load the code and data hunks into RAM.
     while(hunkPointer<file.length){
@@ -211,7 +224,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                     _emulatorMemory[memPointer+j] =data[hunkPointer+j];
                 }
                 
-                printf("hunk:%d %d bytes(hunk_code) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]); //need to subtract from the hunk pointer as I incremented it earlier...
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes(hunk_code) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
                 hunkPointer+=hunkSize;
                 
                 //Check if this code hunk has a reloc32 block;
@@ -225,8 +238,9 @@ void cpu_write_long(unsigned int address, unsigned int value){
                         //quite neat as this catches the hunk_end symbol and moves quietly on...
                         numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
                         uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
-                        printf("%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4)));
-                        
+                        if(numberOfOffsets>0){
+                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
+                        }
                         
                         for(int j=0;j<numberOfOffsets;++j){
                             uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
@@ -238,7 +252,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                         
                     }while(numberOfOffsets>0);
                     
-                    printf("\n");
+                    self.debugOutput.cout =@"\n";
 
                 
                 }
@@ -255,7 +269,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                     _emulatorMemory[memPointer+j] =data[hunkPointer+j];
                 }
                 
-                printf("hunk:%d %d bytes (hunk_data) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]); //need to subtract from the hunk pointer as I incremented it earlier...
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_data) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
                 hunkPointer+=hunkSize;
                 
                 //Check if this data hunk has a reloc32 block;
@@ -269,8 +283,9 @@ void cpu_write_long(unsigned int address, unsigned int value){
                         //quite neat as this catches the hunk_end symbol and moves quietly on...
                         numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
                         uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
-                        printf("%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4)));
-                        
+                        if(numberOfOffsets>0){
+                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
+                        }
                         
                         for(int j=0;j<numberOfOffsets;++j){
                             uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
@@ -282,7 +297,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                         
                     }while(numberOfOffsets>0);
                     
-                    printf("\n");
+                    self.debugOutput.cout =@"\n";
                 }
                 
                 
@@ -294,23 +309,29 @@ void cpu_write_long(unsigned int address, unsigned int value){
                 hunkPointer+=hunkSize;
                 break;
                 
+            case HUNK_BSS:
+                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
+                currentHunk++;
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk_bss of Size:%d\n\n",hunkSize];
+                break;
+                
             case HUNK_END:
                 //ignore end hunks
                 break;
                 
                 
             default:
-                printf("Unsupported hunk type %d\n",hunkType);
+                self.debugOutput.cout =[NSString stringWithFormat:@"Unsupported hunk type %d\n",hunkType];
                 break;
         }
         
     }
     
-    m68k_set_reg(M68K_REG_PC, (uint32_t)address);
+    m68k_set_reg(M68K_REG_PC, (uint32_t)hunkAddress[0]);
 
 
-    printf("Emulation started...!\n");
-    M68KState=M68KSTATE_RUNNING;
+    self.debugOutput.cout =@"Emulation started...!\n";
+    M68KState=M68KSTATE_READY;
 }
 
 -(void)restartCPU{
@@ -319,15 +340,6 @@ void cpu_write_long(unsigned int address, unsigned int value){
     //Set up the Amiga memory map, fill the first few bytes with NOPs, just to let the CPU run a few instructions.
     WRITE_WORD(_emulatorMemory, 0, 0x4E71);
     WRITE_WORD(_emulatorMemory, 2, 0x4E71);
-    WRITE_WORD(_emulatorMemory, 4, 0x4E71);
-    WRITE_WORD(_emulatorMemory, 6,  65535); // there is the unfeasable lvo value.
-    WRITE_WORD(_emulatorMemory, 8, 0x4E71);
-    WRITE_WORD(_emulatorMemory,10, 0x4E70); //call lvo 65535... which halts the emulato, this is the last address on the Supervisor stack.
-    WRITE_WORD(_emulatorMemory,12, 0x4E71);
-    WRITE_WORD(_emulatorMemory,14, 0x4E71);
-    WRITE_WORD(_emulatorMemory,16, 0x4E71);
-    WRITE_WORD(_emulatorMemory,20, 0x4E71);
-    WRITE_WORD(_emulatorMemory,12, 0x4E71);
 
     //Set the Supervisor stack to the top of chipram:
     m68k_set_reg(M68K_REG_SP, SUPERVISOR_STACK);
@@ -346,10 +358,55 @@ void cpu_write_long(unsigned int address, unsigned int value){
     [self.dosLibrary buildJumpTableSize:170];
     [self.execLibrary addlibrary:self.dosLibrary];
     
+    //Setup graphics.library
+    self.graphicsLibrary = [[EMUGraphics alloc]initAtAddress:GFX_BASE];
+    [self.graphicsLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.graphicsLibrary];
+    
+    //Setup intuition.library
+    self.intuitionLibrary = [[EMUIntuition alloc]initAtAddress:INTUI_BASE];
+    [self.intuitionLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.intuitionLibrary];
+    
+    //Setup icon.library
+    self.iconLibrary = [[EMUIcon alloc]initAtAddress:ICON_BASE];
+    [self.iconLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.iconLibrary];
+    
     //Setup utility.library
-    self.utilityLibrary = [[EMUDos alloc]initAtAddress:UTIL_BASE];
+    self.utilityLibrary = [[EMUUtility alloc]initAtAddress:UTIL_BASE];
     [self.utilityLibrary buildJumpTableSize:170];
     [self.execLibrary addlibrary:self.utilityLibrary];
+    
+    //Setup layers.library
+    self.layersLibrary = [[EMULayers alloc]initAtAddress:LAYER_BASE];
+    [self.layersLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.layersLibrary];
+    
+    //Setup gadtools.library
+    self.gadtoolsLibrary = [[EMUGadtools alloc]initAtAddress:GADTOOL_BASE];
+    [self.gadtoolsLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.gadtoolsLibrary];
+    
+    //Setup diskfont.library
+    self.diskfontLibrary = [[EMUDiskfont alloc]initAtAddress:DISKFONT_BASE];
+    [self.diskfontLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.diskfontLibrary];
+    
+    //Setup mathffp.library
+    self.mathffpLibrary = [[EMUMathffp alloc]initAtAddress:MATHFFP_BASE];
+    [self.mathffpLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.mathffpLibrary];
+    
+    //Setup mathtrans.library
+    self.mathtransLibrary = [[EMUMathtrans alloc]initAtAddress:MATHTRANS_BASE];
+    [self.mathtransLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.mathtransLibrary];
+    
+    //Setup expansion.library
+    self.expansionLibrary = [[EMUExpansion alloc]initAtAddress:MATHTRANS_BASE];
+    [self.expansionLibrary buildJumpTableSize:170];
+    [self.execLibrary addlibrary:self.expansionLibrary];
     
     //Kick the emulation off!
     M68KState=M68KSTATE_STOPPED;     //but don't let it run until we have some code loaded
@@ -358,6 +415,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
     WRITE_WORD(_emulatorMemory,0, 0x4E70); //trap execution from address 0...
 }
 
+
 -(void)execute{
     m68k_execute(1);
 }
@@ -365,9 +423,12 @@ void cpu_write_long(unsigned int address, unsigned int value){
 -(void)execute:(NSTimer*)timer{
     //called once every second by the timer
     
-    if(M68KState==M68KSTATE_RUNNING){
+    if(M68KState==M68KSTATE_READY){
+        M68KState=M68KSTATE_RUNNING;
         m68k_execute((int)self.instructionsPerQuantum);
+        M68KState = M68KSTATE_READY;
     }
+
 }
 
 -(void)bounce{
@@ -375,6 +436,10 @@ void cpu_write_long(unsigned int address, unsigned int value){
     
     //uint32_t a6 = m68k_get_reg(NULL, M68K_REG_A6);    //A^ is supposed to contain the lib address... but i can work it out from the pc + lvo
     uint32_t pc = m68k_get_reg(NULL, M68K_REG_PC);      //this is always one word greater than the current instruction for the jumptable.
+    
+    //bump the CPU into Supervior mode set the SR flag
+   // uint32_t SR = m68k_get_reg(NULL, M68K_REG_SR);
+   // m68k_set_reg(M68K_REG_SR, SR | 0x1000);
     
     if(pc==2){
         printf("Emulation Terminated... no more tasks to run\n");
@@ -385,13 +450,25 @@ void cpu_write_long(unsigned int address, unsigned int value){
     int lib = pc + lvo - 2;
     
     switch(lib){
-        case EXEC_BASE:[self.execLibrary callFunction:lvo];break;
-        case  DOS_BASE:[self.dosLibrary  callFunction:lvo];break;
+        case      EXEC_BASE:[self.execLibrary       callFunction:lvo];break;
+        case       DOS_BASE:[self.dosLibrary        callFunction:lvo];break;
+        case       GFX_BASE:[self.graphicsLibrary   callFunction:lvo];break;
+        case     INTUI_BASE:[self.intuitionLibrary  callFunction:lvo];break;
+        case      ICON_BASE:[self.iconLibrary       callFunction:lvo];break;
+        case      UTIL_BASE:[self.iconLibrary       callFunction:lvo];break;
+        case     LAYER_BASE:[self.layersLibrary     callFunction:lvo];break;
+        case   GADTOOL_BASE:[self.gadtoolsLibrary   callFunction:lvo];break;
+        case  DISKFONT_BASE:[self.diskfontLibrary   callFunction:lvo];break;
+        case   MATHFFP_BASE:[self.mathffpLibrary    callFunction:lvo];break;
+        case MATHTRANS_BASE:[self.mathtransLibrary  callFunction:lvo];break;
+        case EXPANSION_BASE:[self.expansionLibrary  callFunction:lvo];break;
     }
     
-    m68k_set_reg(M68K_REG_PC, pc-4);
+    //Put CPU back into User mode;
+   // m68k_set_reg(M68K_REG_SR, SR & 0xFFFFEFFF);
     
-    M68KState=M68KSTATE_RUNNING;
+    m68k_set_reg(M68K_REG_PC, pc-4);
+    M68KState=M68KSTATE_READY;
 }
 
 
