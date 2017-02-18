@@ -8,9 +8,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface EMUConsoleView : NSTextView
+@interface EMUConsoleView : NSTextView 
+
+@property (nonatomic) NSInteger charCount;
 
 -(void)setCout:(NSString*)output;
+
 
 @end
 

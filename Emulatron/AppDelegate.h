@@ -8,10 +8,15 @@
 
 #import <Cocoa/Cocoa.h>
 #import "Emulator.h"
+#import "DisassemblerWindow.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (nonatomic,strong) Emulator* amiga;
+
+
+-(IBAction)closeDisassemblerWindow:(id)sender;
+    
 
 @end
 

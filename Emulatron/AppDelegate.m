@@ -11,10 +11,12 @@
 
 @interface AppDelegate ()
 
-@property (weak) IBOutlet NSWindow *window;
-@property (weak) IBOutlet EMUConsoleView *debugOutput;
+@property (weak) IBOutlet NSWindow* window;
+@property (weak) IBOutlet EMUConsoleView* debugOutput;
 @property (nonatomic,strong) NSOpenPanel* openDlg;
 
+@property (weak) IBOutlet DisassemblerWindow* DisassemblerWindow;
+@property (weak) IBOutlet EMUConsoleView* disassemblerOutput;
 
 @end
 
@@ -23,8 +25,12 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
     
-    self.amiga =[[Emulator alloc]init];
-    [self.amiga execute];
+    self.amiga =[[Emulator alloc]initWithDebug:self.debugOutput];
+    
+    NSFont* font =[NSFont fontWithName:@"PT Mono" size:11];
+    [self.disassemblerOutput  setFont:font];
+    self.amiga.disassemblerOutput = self.disassemblerOutput;
+    
     
     _openDlg = [NSOpenPanel openPanel];
     [_openDlg setAllowsMultipleSelection:NO];
@@ -36,34 +42,41 @@
     
 
     //setup debug console
-    self.amiga.debugOutput = self.debugOutput;
+
 
     //[self openDocument:self];
+    //NSURL* fileURL = [NSURL URLWithString:@"file:///Users/matt/Library/Mobile%20Documents/com~apple~CloudDocs/Type"];
+
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/matt/Library/Mobile%20Documents/com~apple~CloudDocs/Type"]];
-    //[self.amiga loadFile:data toSegListAt:32];
+    //NSURL* fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"];
+
     
-    NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"]];
-    [self.amiga loadFile:data toSegListAt:16];
+    //NSURL* fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/C/List"];
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/C/List"]];
-    //[self.amiga loadFile:data toSegListAt:0x400];
+    //NSURL* fileURL = [NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/System/NoFastMem"];
+
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/System/NoFastMem"]];
-    //[self.amiga loadFile:data toSegListAt:0x400];
+    NSURL* fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/Utilities/Clock"];
+
     
-    // NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Workbench/Utilities/Clock"]];
-    //[self.amiga loadFile:data toSegListAt:0x400];
+    //NSURL* fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/Sysinfo/SysInfo"];
+
+    uint32_t segList = [self.amiga.dosLibrary loadSeg:fileURL];
+    NSString* path = [fileURL absoluteString];
+    NSString* name = [path lastPathComponent];
+    [self.amiga.dosLibrary createProc:[name UTF8String] priority:0 segList:segList stackSize:4096];
     
-    //NSData* data = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/Sysinfo/SysInfo"]];
-    //[self.amiga loadFile:data toSegListAt:0x400];
-    
-    //
+   // NSData* data = [NSData dataWithContentsOfURL:fileURL];
+   // [self.amiga loadFile:data called:[[fileURL absoluteString] lastPathComponent]];
 }
 
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
+}
+
+-(IBAction)closeDisassemblerWindow:(id)sender{
+    return;
 }
 
 -(void)openDocument:(id)sender{
@@ -78,7 +91,7 @@
              NSURL* file = [self.openDlg URL];
              printf("%s",[[file absoluteString] UTF8String]);
              NSData* data  =[NSData dataWithContentsOfURL:file];
-             [self.amiga loadFile:data toSegListAt:1024];          // <-- bottom of chipram is the first executable address on an amiga...
+                 [self.amiga loadFile:data called:[[file absoluteString] lastPathComponent]];
              
          }
          

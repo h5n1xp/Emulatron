@@ -33,6 +33,7 @@
     }
     
     [self setupLibPos];
+    [self getExec];     //does nothing for the libBase, but is important for EMULibrary
 }
 
 -(void)setupLibPos{
@@ -63,6 +64,10 @@
     self.libData = self.base+34; //libData starts after the size of the normal lib structure.
     
     [self setupLibNode];
+}
+
+-(void)getExec{
+    
 }
 
 -(void)setupLibNode{
@@ -184,13 +189,12 @@
 
 -(void)reserved{
     
-    printf("Lib Address:%X reserved function called!\n",m68k_get_reg(NULL, M68K_REG_A6));
+    self.debugOutput.cout =[NSString stringWithFormat:@"Lib Address:%X reserved function called!\n",m68k_get_reg(NULL, M68K_REG_A6)];
     
 }
 
 -(void)unimplemented:(NSInteger)lvo{
-    printf("%s unimplmented function at LVO %d called!\n",self.libNameString,(int)lvo);
-    printf("");
+    self.debugOutput.cout =[NSString stringWithFormat:@"%s unimplmented function at LVO %d called!\n",self.libNameString,(int)lvo];
 }
 
 @end

@@ -46,8 +46,8 @@
 #define HUNK_HEADER         1011
 
 //HORRIBLE GLOBAL VARIABLES... THIS IS THE LINK BETWEEN THE C CODE AND THE OBJ-C code
-uint8_t* _emulatorMemory=NULL;
-id       _emualtorInstance;
+uint8_t*   _emulatorMemory=NULL;
+Emulator*  _emualtorInstance;
 
 /* Called when the CPU pulses the RESET line */
 void cpu_pulse_reset(void){
@@ -117,9 +117,92 @@ void cpu_write_long(unsigned int address, unsigned int value){
     WRITE_LONG(_emulatorMemory, address, value);
 }
 
+// Called when the CPU acknowledges an interrupt we don't use  interupts
+int cpu_irq_ack(int level)
+{
+    /*
+    switch(level)
+    {
+        case 0:
+        return 0;//nmi_device_ack();
+        case 1:
+        return 0;// input_device_ack();
+        case 2:
+        return 0;// output_device_ack();
+    }
+     */
+    return M68K_INT_ACK_SPURIOUS;
+}
+
+
+unsigned int cpu_read_word_dasm(unsigned int address){
+    if(address > 16777216)
+        printf("Disassembler attempted to read word from address %x", address);
+    return READ_WORD(_emulatorMemory, address);
+}
+
+unsigned int cpu_read_long_dasm(unsigned int address){
+    if(address > 16777216)
+        printf("Dasm attempted to read long from address %x", address);
+    return READ_LONG(_emulatorMemory, address);
+}
 
 
 
+
+
+/* Disassembler */
+
+void make_hex(char* buff, unsigned int pc, unsigned int length){
+    char* ptr = buff;
+    
+    for(;length>0;length -= 2)
+        {
+        sprintf(ptr, "%04x", cpu_read_word_dasm(pc));
+        pc += 2;
+        ptr += 4;
+        if(length > 2)
+            *ptr++ = ' ';
+        }
+}
+
+void disassemble_program(){
+    unsigned int pc;
+    unsigned int instr_size;
+    char buff[100];
+    char buff2[100];
+    
+    pc = cpu_read_long_dasm(4);
+    
+    while(pc <= 0x16e)
+        {
+        instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
+        make_hex(buff2, pc, instr_size);
+        printf("%03x: %-20s: %s\n", pc, buff2, buff);
+        pc += instr_size;
+        }
+    fflush(stdout);
+}
+
+
+
+void cpu_instr_callback(){
+    // The following code will print out instructions as they are executed
+    
+    
+    static char buff[100];
+    static char buff2[100];
+    static unsigned int pc;
+    static unsigned int instr_size;
+    
+    pc = m68k_get_reg(NULL, M68K_REG_PC);
+    instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
+    make_hex(buff2, pc, instr_size);
+    //printf("E %03x: %-20s: %s\n", pc, buff2, buff);
+    _emualtorInstance.disassemblerOutput.cout =[NSString stringWithFormat:@"E %03x: %-20s: %s\n", pc, buff2, buff];
+    fflush(stdout);
+    
+}
 
 
 
@@ -142,16 +225,22 @@ void cpu_write_long(unsigned int address, unsigned int value){
     
     m68k_init();
     m68k_set_cpu_type(M68K_CPU_TYPE_68000); //Pretend to be an A500 for now...
+
+    return self;
+}
+
+-(Emulator*)initWithDebug:(EMUConsoleView*)console{
+    self = self.init;
+    
+    self.debugOutput = console;
     [self restartCPU];
     return self;
 }
 
-
-
--(void)loadFile:(NSData*)file toSegListAt:(NSInteger)address{
-    M68KState=M68KSTATE_STOPPED;
+-(void)loadFile:(NSData*)file called:(NSString*)name{
+    _execLibrary.M68KState=M68KSTATE_STOPPED;
     
-    self.debugOutput.cout =@"\nEmulatron LoadSeg mk1:\n";
+    self.debugOutput.cout =[NSString stringWithFormat:@"\nEmulatron LoadSeg mk1: loading %s\n",[name UTF8String]];
     
     uint8_t* data =(uint8_t*)file.bytes;
     
@@ -181,31 +270,33 @@ void cpu_write_long(unsigned int address, unsigned int value){
         uint32_t RAMType = (READ_LONG(data, hunkPointer)   & 0xC0000000) >> 30;
         uint32_t RAMTag = 0;
         switch (RAMType) {
-            case 0:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: fast ram (prefered) or chip ram at ",i];RAMTag=4;break;
-            case 1:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: chip ram or fail at ",i];RAMTag=2;break;
-            case 2:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: fast ram or fail at ",i];RAMTag=4;break;
-            case 3:  self.debugOutput.cout =[NSString stringWithFormat:@"Hunk %d: some ram tag I don't know! at ",i];break;
+            case 0:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram (prefered) or chip ram using ",i];RAMTag=4;break;
+            case 1:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: chip ram or fail using ",i];RAMTag=2;break;
+            case 2:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram or fail using ",i];RAMTag=4;break;
+            case 3:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: some ram tag I don't know! using ",i];break;
         }
         uint32_t RAMSize = (READ_LONG(data, hunkPointer)*4)& 0x3FFFFFFF;hunkPointer+=4;
+        RAMSize +=4; //add 4 bytes to hold the address of the next segment
         
-        hunkAddress[i]=[self.execLibrary allocMem:RAMSize with:RAMTag];  //all allocated in Fast Ram for now :(
+        hunkAddress[i]=[self.execLibrary allocMem:RAMSize with:RAMTag]+4;  //The memory allocated is 4bytes too big, so the address we need is 4bytes into the memory allocation.
+        
+        uint32_t currentSegment =hunkAddress[i];
+        if(i !=0){
+            uint32_t previousSegment = hunkAddress[i-1];
+            WRITE_LONG(_emulatorMemory,previousSegment-4,currentSegment-4); //Write the next Hunk address to the top of the previous hunk... to create a seglist.
+        }
+        WRITE_LONG(_emulatorMemory,currentSegment-4,0xDEADC0DE);            //Null out the current segment's next hunk pointer.
         
         totalRamNeeded+=RAMSize;
         
         hunkLoc = hunkLoc + RAMSize + 4; //(put a 4 byte between hunks to keep them apart)
         
-         self.debugOutput.cout =[NSString stringWithFormat:@"0x%X (%d bytes)\n",hunkAddress[i],RAMSize];
+        //self.debugOutput.cout =[NSString stringWithFormat:@"0x%X (%d bytes)\n",hunkAddress[i],RAMSize];
         
 
         
     }
     self.debugOutput.cout =[NSString stringWithFormat:@"\ntotal Ram needed:%d\n\n",totalRamNeeded];
-    
-    //build a task structure for exec
-    uint32_t taskStructure = [self.execLibrary allocMem:128 with:4];
-    uint32_t taskStack     = [self.execLibrary allocMem:4096 with:4];
-    
-    printf("Stack and task control block\n\n");
     
     // Hunk header read, now time to load the code and data hunks into RAM.
     while(hunkPointer<file.length){
@@ -224,7 +315,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                     _emulatorMemory[memPointer+j] =data[hunkPointer+j];
                 }
                 
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes(hunk_code) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes(hunk_code) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
                 hunkPointer+=hunkSize;
                 
                 //Check if this code hunk has a reloc32 block;
@@ -269,7 +360,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
                     _emulatorMemory[memPointer+j] =data[hunkPointer+j];
                 }
                 
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_data) loaded at 0x%x\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_data) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
                 hunkPointer+=hunkSize;
                 
                 //Check if this data hunk has a reloc32 block;
@@ -312,7 +403,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
             case HUNK_BSS:
                 hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
                 currentHunk++;
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk_bss of Size:%d\n\n",hunkSize];
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_bss)\n",currentHunk-1,hunkSize];
                 break;
                 
             case HUNK_END:
@@ -329,9 +420,10 @@ void cpu_write_long(unsigned int address, unsigned int value){
     
     m68k_set_reg(M68K_REG_PC, (uint32_t)hunkAddress[0]);
 
+    char* mem =&_emulatorMemory[hunkAddress[7]];
 
-    self.debugOutput.cout =@"Emulation started...!\n";
-    M68KState=M68KSTATE_READY;
+    self.debugOutput.cout =@"Emulation started...!\n\n";
+    _execLibrary.M68KState=M68KSTATE_READY;
 }
 
 -(void)restartCPU{
@@ -343,7 +435,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
 
     //Set the Supervisor stack to the top of chipram:
     m68k_set_reg(M68K_REG_SP, SUPERVISOR_STACK);
-    WRITE_LONG(_emulatorMemory, SUPERVISOR_STACK, 0); //write address 10, so the very last place the OS will jump to will halt the emulator.
+    WRITE_LONG(_emulatorMemory, SUPERVISOR_STACK, 0); //write address 0, so the very last place the OS will jump to will halt the emulator.
     
     // run a few instructions to clear the pipeline.
     [self execute];
@@ -351,6 +443,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
     //Setup exec.library
      self.execLibrary = [[EMUExec alloc]initAtAddress:EXEC_BASE];
     [self.execLibrary buildJumpTableSize:170];  //170 LVOs chosen as that makes a nice 1024byte jumptable
+     self.execLibrary.debugOutput = self.debugOutput;
      WRITE_LONG(_emulatorMemory, 4, EXEC_BASE); //write execbase to address 0x4
     
     //Setup dos.library
@@ -409,10 +502,11 @@ void cpu_write_long(unsigned int address, unsigned int value){
     [self.execLibrary addlibrary:self.expansionLibrary];
     
     //Kick the emulation off!
-    M68KState=M68KSTATE_STOPPED;     //but don't let it run until we have some code loaded
+    _execLibrary.M68KState=M68KSTATE_STOPPED;     //but don't let it run until we have some code loaded
     self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:YES];
     
     WRITE_WORD(_emulatorMemory,0, 0x4E70); //trap execution from address 0...
+    WRITE_WORD(_emulatorMemory,2, 0x4E70); //trap execution from address 2...
 }
 
 
@@ -421,18 +515,23 @@ void cpu_write_long(unsigned int address, unsigned int value){
 }
 
 -(void)execute:(NSTimer*)timer{
-    //called once every second by the timer
+    //called once every quantum by the timer
     
-    if(M68KState==M68KSTATE_READY){
-        M68KState=M68KSTATE_RUNNING;
+    if(_execLibrary.M68KState==M68KSTATE_READY){
+        _execLibrary.M68KState=M68KSTATE_RUNNING;
         m68k_execute((int)self.instructionsPerQuantum);
-        M68KState = M68KSTATE_READY;
+        
+        [_execLibrary schedule];
+        
+        if(_execLibrary.M68KState !=M68KSTATE_STOPPED){
+            _execLibrary.M68KState = M68KSTATE_READY;
+        }
     }
 
 }
 
 -(void)bounce{
-    M68KState=M68KSTATE_STOPPED; //Pause CPU while we service the function call
+    _execLibrary.M68KState=M68KSTATE_STOPPED; //Pause CPU while we service the function call
     
     //uint32_t a6 = m68k_get_reg(NULL, M68K_REG_A6);    //A^ is supposed to contain the lib address... but i can work it out from the pc + lvo
     uint32_t pc = m68k_get_reg(NULL, M68K_REG_PC);      //this is always one word greater than the current instruction for the jumptable.
@@ -442,7 +541,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
    // m68k_set_reg(M68K_REG_SR, SR | 0x1000);
     
     if(pc==2){
-        printf("Emulation Terminated... no more tasks to run\n");
+            self.debugOutput.cout =@"\nEmulation Terminated... no more tasks to run\n";
         return;
     }
     
@@ -468,7 +567,7 @@ void cpu_write_long(unsigned int address, unsigned int value){
    // m68k_set_reg(M68K_REG_SR, SR & 0xFFFFEFFF);
     
     m68k_set_reg(M68K_REG_PC, pc-4);
-    M68KState=M68KSTATE_READY;
+    _execLibrary.M68KState=M68KSTATE_READY;
 }
 
 

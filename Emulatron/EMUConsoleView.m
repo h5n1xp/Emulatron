@@ -11,10 +11,21 @@
 @implementation EMUConsoleView
 
 -(void)setCout:(NSString*)output{
-    
-    NSString* newString = [self.string stringByAppendingString:output];
 
+    NSString* newString;
+    
+    if(self.string.length>4096){
+        NSString* temp = [self.string substringFromIndex:512];
+        newString = [temp stringByAppendingString:output];
+    }else{
+        newString = [self.string stringByAppendingString:output];
+    }
+    
     self.string =newString;
+}
+
+-(void)delete:(id)sender{
+    return;
 }
 
 - (void)drawRect:(NSRect)dirtyRect {

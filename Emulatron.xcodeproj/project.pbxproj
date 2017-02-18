@@ -33,8 +33,8 @@
 		C9C4CBB21E43C4CD0052AD45 /* m68kopac.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBAF1E43C4CD0052AD45 /* m68kopac.c */; };
 		C9C4CBB31E43C4CD0052AD45 /* m68kopdm.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB01E43C4CD0052AD45 /* m68kopdm.c */; };
 		C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB11E43C4CD0052AD45 /* m68kopnz.c */; };
-		C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB51E43C5F70052AD45 /* sim.c */; };
 		C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */ = {isa = PBXBuildFile; fileRef = C9C4CBB71E43C67B0052AD45 /* m68kdasm.c */; };
+		C9E5B8351E57341700173421 /* DisassemblerWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = C9E5B8341E57341700173421 /* DisassemblerWindow.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,9 +89,10 @@
 		C9C4CBAF1E43C4CD0052AD45 /* m68kopac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopac.c; sourceTree = "<group>"; };
 		C9C4CBB01E43C4CD0052AD45 /* m68kopdm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopdm.c; sourceTree = "<group>"; };
 		C9C4CBB11E43C4CD0052AD45 /* m68kopnz.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kopnz.c; sourceTree = "<group>"; };
-		C9C4CBB51E43C5F70052AD45 /* sim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sim.c; sourceTree = "<group>"; };
 		C9C4CBB71E43C67B0052AD45 /* m68kdasm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = m68kdasm.c; sourceTree = "<group>"; };
 		C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = endianMacros.h; sourceTree = "<group>"; };
+		C9E5B8331E57341700173421 /* DisassemblerWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DisassemblerWindow.h; path = ../DisassemblerWindow.h; sourceTree = "<group>"; };
+		C9E5B8341E57341700173421 /* DisassemblerWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DisassemblerWindow.m; path = ../DisassemblerWindow.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,11 +165,12 @@
 				C9C4CB9A1E43BAC50052AD45 /* Musashi */,
 				C9CF11CE1E44ADD300E8B1FD /* endianMacros.h */,
 				C9C4CBA91E43BDCD0052AD45 /* sim.h */,
-				C9C4CBB51E43C5F70052AD45 /* sim.c */,
 				C9C4CBA61E43BBA50052AD45 /* Emulator.h */,
 				C9C4CBA71E43BBA50052AD45 /* Emulator.m */,
 				C93802A61E55D36E00D1F35B /* EMUConsoleView.h */,
 				C93802A71E55D36E00D1F35B /* EMUConsoleView.m */,
+				C9E5B8331E57341700173421 /* DisassemblerWindow.h */,
+				C9E5B8341E57341700173421 /* DisassemblerWindow.m */,
 				C9C4CB891E43BA460052AD45 /* AppDelegate.h */,
 				C9C4CB8A1E43BA460052AD45 /* AppDelegate.m */,
 				C9C4CB8F1E43BA460052AD45 /* Assets.xcassets */,
@@ -283,6 +285,7 @@
 				C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */,
 				C9BC020C1E4BD2D200C90BB9 /* EMUIntuition.m in Sources */,
 				C9C4CB9F1E43BAF90052AD45 /* m68kcpu.c in Sources */,
+				C9E5B8351E57341700173421 /* DisassemblerWindow.m in Sources */,
 				C9C4CB8E1E43BA460052AD45 /* main.m in Sources */,
 				C9BC021E1E4BDE0500C90BB9 /* EMUMathtrans.m in Sources */,
 				C950058D1E4B67B400182F6F /* EMUGraphics.m in Sources */,
@@ -290,7 +293,6 @@
 				C9C4CB8B1E43BA460052AD45 /* AppDelegate.m in Sources */,
 				C93802A41E4DD14D00D1F35B /* EMUUtility.m in Sources */,
 				C9C4CBAE1E43C4B20052AD45 /* m68kops.c in Sources */,
-				C9C4CBB61E43C5F70052AD45 /* sim.c in Sources */,
 				C96E1AB01E4A121A007B85EF /* EMUMemoryBlock.m in Sources */,
 				C9C4CBB41E43C4CD0052AD45 /* m68kopnz.c in Sources */,
 				C9C4CBB81E43C67B0052AD45 /* m68kdasm.c in Sources */,

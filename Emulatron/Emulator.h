@@ -22,19 +22,13 @@
 #import "EMUExpansion.h"
 #import "EMUUtility.h"
 
-#define M68KSTATE_STOPPED   00
-#define M68KSTATE_THROTTLED 05
-#define M68KSTATE_READY     10
-#define M68KSTATE_RUNNING   15
 
 
-@interface Emulator : NSObject{
-    
-    NSInteger M68KState;
-    
-};
+
+@interface Emulator : NSObject
 
 @property (nonatomic,weak) EMUConsoleView* debugOutput;
+@property (nonatomic,weak) EMUConsoleView *disassemblerOutput;
 
 @property (nonatomic,strong) NSTimer*       executionTimer;
 @property (nonatomic,strong) NSMutableData* addressSpace;
@@ -55,7 +49,8 @@
 @property (nonatomic,strong) EMUMathtrans*  mathtransLibrary;
 @property (nonatomic,strong) EMUExpansion*  expansionLibrary;
 
--(void)loadFile:(NSData*)file toSegListAt:(NSInteger)address;
+-(Emulator*)initWithDebug:(EMUConsoleView*)console;
+-(void)loadFile:(NSData*)file called:(NSString*)name;
 -(void)restartCPU;
 -(void)execute;
 -(void)execute:(NSTimer*)timer;
