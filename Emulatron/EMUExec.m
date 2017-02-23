@@ -46,15 +46,11 @@
     [self.freeFastList addObject:freeFastBlock];
     
     
-    /*setup Library list header functions predate working list functions
-    WRITE_LONG(_emulatorMemory, self.base+378, self.base);  //The Next, which is also the first library is exec.library :)
-    WRITE_LONG(_emulatorMemory, self.base+382, 0);          //List headers always have a no tail.
-    WRITE_LONG(_emulatorMemory, self.base+386, self.base);  //Same as the first.
+    //setup Library list
+    [self addHead:self.base toList:self.base+378];
     WRITE_BYTE(_emulatorMemory, self.base+390, 9);          //List type is a Library list.
     WRITE_BYTE(_emulatorMemory, self.base+391, 0);          //Makes sure the padding byte is clear... I might need to use that as a flag later
-    WRITE_LONG(_emulatorMemory, self.base+4, self.base+378);//The prevNode of the head is always the list header.
-    */
-    [self addHead:self.base toList:self.base+378];
+
     
     //Set up Supervisor Stack
     uint32_t ssp = [self allocMem:16384 with:MEMF_FAST];    //16kb in the Fastram should be fine.
@@ -76,91 +72,166 @@
     [self addTail:newLib.base toList:self.base+378];
     
     return;
-    
-    /* Pre List function code... can be deleted
-    //Scan the libnodes
-    
-    uint32_t nextLibNode = self.base;
-    uint32_t lastLibnode = 0;
-    
-    while(nextLibNode !=0){
-        lastLibnode = nextLibNode;
-        nextLibNode = READ_LONG(_emulatorMemory, nextLibNode);
-        
-    }
-    
-    [self instanceAtNode:lastLibnode].nextLib     = newLib.base;
-    [self instanceAtNode:newLib.base].previousLib = lastLibnode;
-
-    //char* _execmem = &_emulatorMemory[self.base];
-    //char* _dosmem = &_emulatorMemory[newLib.base];
-
-    return;
-     */
 }
 
 -(uint32_t)thisTask{
     return READ_LONG(_emulatorMemory, self.base+276);
 }
 -(void)setThisTask:(uint32_t)address{
+    
+    char* memory = &_emulatorMemory[address];
+    
+    _thisTask=address;
+    uint32_t namePtr = READ_LONG(_emulatorMemory, address+10);
+    
+    if(namePtr !=0){
+        _runningTask =(char*) &_emulatorMemory[namePtr];
+    }else{
+        _runningTask ="!NO TASKS!";
+    }
+    
+
     WRITE_LONG(_emulatorMemory, self.base+276, address);
 }
 
+-(char*)runningTask{
+    return _runningTask;
+}
+
+-(uint32)elapsed{
+    return READ_LONG(_emulatorMemory,self.base+290);
+}
+
+-(void)setElapsed:(uint32_t)value{
+    _elapsed = value;
+    WRITE_LONG(_emulatorMemory, self.base+290, value);
+}
+
+//A littler helper structure to debug the context functions 
+typedef struct{
+    uint32_t REG[18];
+}context_t;
+
 -(void)saveContext{
+    
     uint32_t stackPtr = m68k_get_reg(NULL, M68K_REG_A7);
     
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D0));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D1));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D2));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D3));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D4));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D5));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D6));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_D7));
+    /*
+    char* task =&_emulatorMemory[_thisTask];
+     */
     
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A0));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A1));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A2));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A3));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A4));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A5));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A6));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_A7));
+    /*
+    uint32_t yy = stackPtr;
+    context_t* memory =&_emulatorMemory[stackPtr-72];
+    //memory->REG[7]=1;
     
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
-    WRITE_LONG(_emulatorMemory,--stackPtr, m68k_get_reg(NULL, M68K_REG_PC));
+    context_t check;
+    check.REG[0] = m68k_get_reg(NULL, M68K_REG_D0);
+    check.REG[1] = m68k_get_reg(NULL, M68K_REG_D1);
+    check.REG[2] = m68k_get_reg(NULL, M68K_REG_D2);
+    check.REG[3] = m68k_get_reg(NULL, M68K_REG_D3);
+    check.REG[4] = m68k_get_reg(NULL, M68K_REG_D4);
+    check.REG[5] = m68k_get_reg(NULL, M68K_REG_D5);
+    check.REG[6] = m68k_get_reg(NULL, M68K_REG_D6);
+    check.REG[7] = m68k_get_reg(NULL, M68K_REG_D7);
+    
+    check.REG[8] = m68k_get_reg(NULL, M68K_REG_A0);
+    check.REG[9] = m68k_get_reg(NULL, M68K_REG_A1);
+    check.REG[10] = m68k_get_reg(NULL, M68K_REG_A2);
+    check.REG[11] = m68k_get_reg(NULL, M68K_REG_A3);
+    check.REG[12] = m68k_get_reg(NULL, M68K_REG_A4);
+    check.REG[13] = m68k_get_reg(NULL, M68K_REG_A5);
+    check.REG[14] = m68k_get_reg(NULL, M68K_REG_A6);
+    check.REG[15] = m68k_get_reg(NULL, M68K_REG_A7);
+    
+    check.REG[16] = m68k_get_reg(NULL, M68K_REG_SR);
+    check.REG[17] = m68k_get_reg(NULL, M68K_REG_PC);
+    */
+    
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D0));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D1));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D2));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D3));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D4));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D5));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D6));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D7));
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A0));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A1));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A2));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A3));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A4));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A5));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A6));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A7));
+
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_PC));
     
     WRITE_LONG(_emulatorMemory,self.thisTask+54,stackPtr);
+    
+    return;
+    
 }
 
 -(void)restoreContext{
     uint32_t stackPtr = READ_LONG(_emulatorMemory,self.thisTask+54);
     
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_PC));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_SR));
+    m68k_set_reg(M68K_REG_PC,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_SR,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
     
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A7));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A6));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A5));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A4));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A3));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A2));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A1));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_A0));
+    m68k_set_reg(M68K_REG_A7,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A6,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A5,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A4,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A3,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A2,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A1,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_A0,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
 
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D7));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D6));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D5));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D4));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D3));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D2));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D1));
-    WRITE_LONG(_emulatorMemory,stackPtr++, m68k_get_reg(NULL, M68K_REG_D0));
+    m68k_set_reg(M68K_REG_D7,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D6,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D5,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D4,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D3,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D2,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D1,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_D0,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    
+    /*
+    context_t check;
+    check.REG[0] = m68k_get_reg(NULL, M68K_REG_D0);
+    check.REG[1] = m68k_get_reg(NULL, M68K_REG_D1);
+    check.REG[2] = m68k_get_reg(NULL, M68K_REG_D2);
+    check.REG[3] = m68k_get_reg(NULL, M68K_REG_D3);
+    check.REG[4] = m68k_get_reg(NULL, M68K_REG_D4);
+    check.REG[5] = m68k_get_reg(NULL, M68K_REG_D5);
+    check.REG[6] = m68k_get_reg(NULL, M68K_REG_D6);
+    check.REG[7] = m68k_get_reg(NULL, M68K_REG_D7);
+    
+    check.REG[8] = m68k_get_reg(NULL, M68K_REG_A0);
+    check.REG[9] = m68k_get_reg(NULL, M68K_REG_A1);
+    check.REG[10] = m68k_get_reg(NULL, M68K_REG_A2);
+    check.REG[11] = m68k_get_reg(NULL, M68K_REG_A3);
+    check.REG[12] = m68k_get_reg(NULL, M68K_REG_A4);
+    check.REG[13] = m68k_get_reg(NULL, M68K_REG_A5);
+    check.REG[14] = m68k_get_reg(NULL, M68K_REG_A6);
+    check.REG[15] = m68k_get_reg(NULL, M68K_REG_A7);
+    
+    check.REG[16] = m68k_get_reg(NULL, M68K_REG_SR);
+    check.REG[17] = m68k_get_reg(NULL, M68K_REG_PC);
+    
+    
+    context_t* memory =&_emulatorMemory[stackPtr];
+    */
+    return;
 }
 
 -(void)callFunction:(NSInteger)lvo{
     
-    self.debugOutput.cout = [NSString stringWithFormat:@"Calling %s LVO:%d - ",self.libNameString,(int)lvo];
+    self.debugOutput.cout = [NSString stringWithFormat:@"%s Calling %s LVO:%d - ",_runningTask,self.libNameString,(int)lvo];
     
     switch(lvo){
         case   6:[self open];break;
@@ -183,8 +254,10 @@
         case 270:[self enqueue];break;
         case 276:[self findName];break;
         case 282:[self addTask];break;
+        case 288:[self remTask];break;
         case 294:[self findTask];break;
         case 306:[self setSignal];break;
+        case 324:[self signal];break;
         case 372:[self getMsg];break;
         case 378:[self replyMsg];break;
         case 384:[self waitPort];break;
@@ -205,6 +278,7 @@
 -(uint32_t)allocMem:(uint32_t)byteSize with:(uint32_t)requirements{
     self.debugOutput.cout =[NSString stringWithFormat:@"AllocMem: %d bytes, of type: %d... ",byteSize,requirements];
     
+    //This operation always ensures there is padding at the end of the allocation... this is wasteful, but we can have 4gig and is safer.
     byteSize +=4;               // add on 4 bytes so that this always rounds to a multiple of 4.
     byteSize = byteSize >> 2;   // the shifts basiclly round this to a multiple of 4.
     byteSize = byteSize << 2;
@@ -212,7 +286,7 @@
     NSMutableArray* memlist  = self.freeFastList;
     NSMutableArray* busylist = self.busyFastList;
     
-    //choose which list we need to use chip ram...
+    //only bother to scan the chip list if we need chip ram...
     if((requirements & MEMF_CHIP) == MEMF_CHIP){
         memlist  = self.freeChipList;
         busylist = self.busyChipList;
@@ -320,31 +394,7 @@
     //Use the proper list functions now we have them... also this function should scan the libs: dir if this returns 0.
     self.debugOutput.cout =[NSString stringWithFormat:@"Open Library: %s (version v%d)",libName,version];
     return [self findName:libName inList:self.base+378];
-    
-    
-    /* Prelist functions code... can be deleted
-    //scan the libnodes for the library
-    uint32_t nextLibNode = self.base;
-    uint32_t currentLibNode = 0;
-    
-    while(nextLibNode !=0){
-        currentLibNode = nextLibNode;
-        
-        const char* libNodeName=[self instanceAtNode:currentLibNode].libNameString;
-        
-        if(strcmp(libName, libNodeName)==0){
-            [[self instanceAtNode:currentLibNode] open];
-            break;
-        }
-        
-        nextLibNode = READ_LONG(_emulatorMemory, nextLibNode);
-        
-    }
-    
-    //will return 0 if not found... only in memory libs for now...
-    
-    return nextLibNode;
-     */
+
 }
 
 
@@ -436,10 +486,12 @@
         return;
     }
     
-    uint32_t prevNode = READ_LONG(_emulatorMemory, node+4);
+    uint32_t newPrevNode = READ_LONG(_emulatorMemory, node+4);
     
-    WRITE_LONG(_emulatorMemory, prevNode, nextNode);
-    WRITE_LONG(_emulatorMemory, nextNode+4, prevNode);
+
+    
+    WRITE_LONG(_emulatorMemory, newPrevNode, nextNode);
+    WRITE_LONG(_emulatorMemory, nextNode+4, newPrevNode);
     return;
 }
 
@@ -447,6 +499,18 @@
 -(void)remHead:(uint32_t)list{
     uint32_t node = READ_LONG(_emulatorMemory, list);
     uint32_t nextNode = READ_LONG(_emulatorMemory, node);
+    
+    //the head is the only node, so simply clear the list.
+    if(nextNode==0){
+        WRITE_LONG(_emulatorMemory, list,   0);
+        WRITE_LONG(_emulatorMemory, list+8, 0);
+        
+        //Zero the node fields in case we want to use it for something else.
+        WRITE_LONG(_emulatorMemory, node, 0);
+        WRITE_LONG(_emulatorMemory, node+4, 0);
+        return;
+    }
+    
     WRITE_LONG(_emulatorMemory, nextNode+4, list);             //no more prev node
     WRITE_LONG(_emulatorMemory, list, nextNode);          //old next is now list head
 }
@@ -454,8 +518,17 @@
 -(void)remTail:(uint32_t)list{
     uint32_t node = READ_LONG(_emulatorMemory, list+8);
     uint32_t prevNode = READ_LONG(_emulatorMemory, node+4);
+    
+    //the tail is also the head! ie only one node in list.
+    if(prevNode==list){
+        [self remHead:list];
+    }
+    
     WRITE_LONG(_emulatorMemory, prevNode, 0);               //no more next node
     WRITE_LONG(_emulatorMemory, list+8, prevNode);          //old prev is now list tail
+    
+    
+    
 }
 
 -(void)enqueue:(uint32_t)node inList:(uint32_t)list{
@@ -536,14 +609,81 @@
     if(self.thisTask==0){
         self.thisTask=taskStruct;
         m68k_set_reg(M68K_REG_PC, PC);
+        m68k_set_reg(M68K_REG_A7, READ_LONG(_emulatorMemory,taskStruct+62));
         self.M68KState=M68KSTATE_READY;
         return taskStruct;
     }
-
     
-    [self schedule];
+    if(self.M68KState==M68KSTATE_STOPPED){
+        self.M68KState = M68KSTATE_READY;
+    }
+    
+    //screw around with the contexts, so we get the correct context saved onto the correct stack
+    uint32_t stackPtrS= READ_LONG(_emulatorMemory,taskStruct+62);
+    uint32_t stackPtr=stackPtrS;
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, stackPtrS);
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, PC);
+    
+    WRITE_LONG(_emulatorMemory,taskStruct+54,stackPtr);
+    
+    //[self schedule];
     
     return taskStruct;
+}
+
+-(void)remTask:(uint32_t)task{
+    
+    [self remove:task];
+    if(self.thisTask==task){
+        self.thisTask=0;
+    }
+    [self reschedule];
+    self.debugOutput.cout =@"removing task !WARNING DOES NOT CLEAN UP MEMORY YET!\n";
+}
+
+-(void)signal:(uint32_t)task with:(uint32_t)signalSet{
+    uint32_t sigWait    =READ_LONG(_emulatorMemory, task+22);
+    uint32_t sigReceived=READ_LONG(_emulatorMemory, task+26);
+    sigReceived = sigReceived | signalSet;
+    WRITE_LONG(_emulatorMemory, task+26, sigReceived);
+    
+    //check if the task is waiting to receive any signals.
+    
+    if( (sigReceived & sigWait) != 0){
+        
+        [self remove:task];                         //take task out of the waiting list
+        [self enqueue:task inList:self.base+406];   //add task to ready list.
+        
+        //Set the saved context D0 register to the signals, as it will see them when it wakes up!
+        WRITE_LONG(_emulatorMemory, (READ_LONG(_emulatorMemory,task+54)+68), sigReceived); //Write sigReceived to D0 on the stack (D1 is at +64)...
+        
+        //Clear the Waiting signals (currently this just clears all the sig fields, but really should only clear the waiting ones received)
+        WRITE_LONG(_emulatorMemory, task+22,0);
+        WRITE_LONG(_emulatorMemory, task+26,0);
+        
+        [self reschedule];                          //restart the preemptive round robin.
+    }
+    
+    return;
 }
 
 // 68k Interface *********************************************************************
@@ -560,12 +700,26 @@
 }
 
 -(void)schedule{
+    
+    if(_thisTask==0){
+        return;
+    }
+    
 
+    
     char thisPri = READ_BYTE(_emulatorMemory, self.thisTask+9);
     
     uint32_t nextTask = READ_LONG(_emulatorMemory, self.thisTask);
     
-    //if we raech the end of the task list... jump back to the top
+    //char* taskList =&_emulatorMemory[self.base+406];
+    //char* thisMemory = &_emulatorMemory[_thisTask];
+    //char* nextMemory = &_emulatorMemory[nextTask];
+    
+    if(_elapsed>83){
+         printf("");
+    }
+    
+    //if we reach the end of the task list... jump back to the top
     if(nextTask==0){
         nextTask=READ_LONG(_emulatorMemory, self.base+406);
         
@@ -579,8 +733,10 @@
     
     //if the next task is suitable for running... swap context
     if(nextPri >= thisPri){
+        m68k_end_timeslice();   //Tell the 68k to finish executing any instructions.
         [self saveContext];
         self.thisTask = nextTask;
+        printf("\nTask Switch %d: to %s\n",_elapsed,_runningTask);
         [self restoreContext];
     }
     
@@ -588,25 +744,23 @@
 
 -(void)reschedule{
     
-    uint32_t currentTask=self.thisTask;
-    char     currentPri = READ_BYTE(_emulatorMemory, currentTask+9);
-    uint32_t highPriTask = currentPri;
-    
-    uint32_t nextTask = READ_LONG(_emulatorMemory, self.base+406); //get the top of the ready list;
-    
-    while(nextTask !=0){
-        
-        char nextPri = READ_BYTE(_emulatorMemory, nextTask+9);
-        
-        if(nextPri >= currentPri){
-            highPriTask=nextTask;
-            break;
-        }
-        
-        nextTask = READ_LONG(_emulatorMemory, nextTask);
+    if(self.thisTask !=0){
+        [self saveContext];
     }
     
-    return;
+    uint32_t firstTask=READ_LONG(_emulatorMemory, self.base+406);
+    
+    
+    self.thisTask = firstTask;
+    printf("\nTask Switch to %s\n",_runningTask);
+    
+    if(firstTask==0){
+        self.M68KState=M68KSTATE_STOPPED;
+        m68k_set_reg(M68K_REG_PC, 0);
+        return;
+    }
+    
+    [self restoreContext];
 }
 
 
@@ -662,14 +816,20 @@
 }
 -(void)remove{
     //(node)(a1)
+    uint32_t node = m68k_get_reg(NULL, M68K_REG_A1);
+    [self remove:node];
     return;
 }
 -(void)remHead{
     //(list)(a0)
+    uint32_t list = m68k_get_reg(NULL, M68K_REG_A0);
+    [self remHead:list];
     return;
 }
 -(void)remTail{
     //(list)(a0)
+    uint32_t list = m68k_get_reg(NULL, M68K_REG_A0);
+    [self remTail:list];
     return;
 }
 -(void)enqueue{
@@ -703,6 +863,13 @@
     
 }
 
+-(void)remTask{
+    //288 $fee0 -$0120 RemTask(task)(a1)
+    uint32_t task = m68k_get_reg(NULL, M68K_REG_A1);
+    [self remTask:task];
+    return;
+}
+
 -(uint32_t)findTask{
     self.debugOutput.cout =@"Find Task: ";
     uint32_t A1 =m68k_get_reg(NULL, M68K_REG_A1);
@@ -731,6 +898,14 @@
 
 -(void)setSignal{
     self.debugOutput.cout =@"SetSignal()... not implemented";
+}
+
+//324 $febc -$0144 Signal(task,signalSet)(a1,d0)
+-(void)signal{
+    uint32_t task      = m68k_get_reg(NULL, M68K_REG_A1);
+    uint32_t signalSet = m68k_get_reg(NULL, M68K_REG_D0);
+    [self signal:task with:signalSet];
+    return;
 }
 
 -(void)getMsg{

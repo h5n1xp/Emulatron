@@ -25,7 +25,4 @@
 (BASE)[(ADDR)+2] = ((VAL)>>8)&0xff;		\
 (BASE)[(ADDR)+3] =  (VAL)&0xff
 
-
-#define READ_WORD1(VAL) 
-
 #endif /* endianMacros_h */

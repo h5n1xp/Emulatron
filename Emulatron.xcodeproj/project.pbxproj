@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C913F2F71E5F21DC00A476AB /* EMUexecNode.m in Sources */ = {isa = PBXBuildFile; fileRef = C913F2F61E5F21DC00A476AB /* EMUexecNode.m */; };
 		C91BFA0E1E46149F00864200 /* EMUDos.m in Sources */ = {isa = PBXBuildFile; fileRef = C91BFA0D1E46149F00864200 /* EMUDos.m */; };
 		C93802A11E4CED2300D1F35B /* EMUExpansion.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802A01E4CED2300D1F35B /* EMUExpansion.m */; };
 		C93802A41E4DD14D00D1F35B /* EMUUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = C93802A31E4DD14D00D1F35B /* EMUUtility.m */; };
@@ -38,6 +39,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C913F2F51E5F21DC00A476AB /* EMUexecNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUexecNode.h; sourceTree = "<group>"; };
+		C913F2F61E5F21DC00A476AB /* EMUexecNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUexecNode.m; sourceTree = "<group>"; };
 		C91BFA0C1E46149F00864200 /* EMUDos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUDos.h; sourceTree = "<group>"; };
 		C91BFA0D1E46149F00864200 /* EMUDos.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EMUDos.m; sourceTree = "<group>"; };
 		C938029F1E4CED2300D1F35B /* EMUExpansion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EMUExpansion.h; sourceTree = "<group>"; };
@@ -109,6 +112,8 @@
 		C93802A51E549D2300D1F35B /* Emulated Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				C913F2F51E5F21DC00A476AB /* EMUexecNode.h */,
+				C913F2F61E5F21DC00A476AB /* EMUexecNode.m */,
 				C96E1AAE1E4A121A007B85EF /* EMUMemoryBlock.h */,
 				C96E1AAF1E4A121A007B85EF /* EMUMemoryBlock.m */,
 				C93802A91E55E17200D1F35B /* EMULibBase.h */,
@@ -285,6 +290,7 @@
 				C974B6561E4541A600DBF0F8 /* EMUExec.m in Sources */,
 				C9BC020C1E4BD2D200C90BB9 /* EMUIntuition.m in Sources */,
 				C9C4CB9F1E43BAF90052AD45 /* m68kcpu.c in Sources */,
+				C913F2F71E5F21DC00A476AB /* EMUexecNode.m in Sources */,
 				C9E5B8351E57341700173421 /* DisassemblerWindow.m in Sources */,
 				C9C4CB8E1E43BA460052AD45 /* main.m in Sources */,
 				C9BC021E1E4BDE0500C90BB9 /* EMUMathtrans.m in Sources */,

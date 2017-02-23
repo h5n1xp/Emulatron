@@ -3,6 +3,7 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -18,6 +19,12 @@
                 <outlet property="DisassemblerWindow" destination="49Z-YD-JbB" id="6Tc-f2-AZI"/>
                 <outlet property="debugOutput" destination="Pnv-72-tUd" id="j9z-51-zN1"/>
                 <outlet property="disassemblerOutput" destination="kDb-ce-MOi" id="qJ2-hP-3lG"/>
+                <outlet property="eightthSecond" destination="tLN-Nk-eWg" id="6zN-eO-xVX"/>
+                <outlet property="halfSecond" destination="34k-6u-5Mz" id="Rx4-UN-Hg1"/>
+                <outlet property="instructionsPerQuantumSlider" destination="JmK-uj-qSn" id="cdk-ka-kOM"/>
+                <outlet property="ipqLable" destination="CLh-D7-bpS" id="yxH-AJ-byt"/>
+                <outlet property="oneSecond" destination="IIb-LI-Y6X" id="9As-a2-Zya"/>
+                <outlet property="quaterSecond" destination="sok-23-B2p" id="dZg-2r-wp2"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -208,25 +215,26 @@
         <window title="Emulatron - ROM Wack" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="480" height="360"/>
+            <rect key="contentRect" x="335" y="390" width="800" height="360"/>
             <rect key="screenRect" x="0.0" y="0.0" width="3840" height="2137"/>
+            <value key="minSize" type="size" width="800" height="360"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                <rect key="frame" x="0.0" y="0.0" width="800" height="360"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uOC-rk-Ic9">
-                        <rect key="frame" x="-1" y="-1" width="482" height="326"/>
+                        <rect key="frame" x="-1" y="-1" width="802" height="265"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="f0V-SH-i52">
-                            <rect key="frame" x="1" y="1" width="465" height="324"/>
+                            <rect key="frame" x="1" y="1" width="785" height="263"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView ambiguous="YES" importsGraphics="NO" fieldEditor="YES" usesFontPanel="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" id="Pnv-72-tUd" customClass="EMUConsoleView">
-                                    <rect key="frame" x="0.0" y="0.0" width="465" height="324"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="785" height="263"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <size key="minSize" width="465" height="324"/>
-                                    <size key="maxSize" width="482" height="10000000"/>
+                                    <size key="minSize" width="785" height="263"/>
+                                    <size key="maxSize" width="785" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
                             </subviews>
@@ -237,18 +245,98 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="c2R-i5-bIu">
-                            <rect key="frame" x="466" y="1" width="15" height="324"/>
+                            <rect key="frame" x="786" y="1" width="15" height="263"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rGf-l8-XLL">
-                        <rect key="frame" x="20" y="331" width="125" height="25"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <rect key="frame" x="655" y="329" width="125" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" title="Set Paths" bezelStyle="texturedRounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="qYT-kU-EF0">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                     </button>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JmK-uj-qSn">
+                        <rect key="frame" x="34" y="291" width="204" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" minValue="1" maxValue="250" doubleValue="1" tickMarkPosition="above" numberOfTickMarks="25" allowsTickMarkValuesOnly="YES" sliderType="linear" id="4ul-Gw-cjb"/>
+                        <connections>
+                            <action selector="adjustIPQ:" target="Voe-Tx-rLC" id="pmU-Y4-d3a"/>
+                        </connections>
+                    </slider>
+                    <box fixedFrame="YES" boxType="custom" cornerRadius="4" title="Box" translatesAutoresizingMaskIntoConstraints="NO" id="x4G-I3-qOs">
+                        <rect key="frame" x="256" y="272" width="254" height="80"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <view key="contentView" ambiguous="YES" id="FAn-fh-AB3">
+                            <rect key="frame" x="1" y="1" width="252" height="78"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uIe-HR-Nhd">
+                                    <rect key="frame" x="18" y="61" width="216" height="17"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="OS Quantum" id="2gJ-Zr-AEx">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IIb-LI-Y6X">
+                                    <rect key="frame" x="5" y="7" width="57" height="37"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" title="1s" bezelStyle="regularSquare" imagePosition="below" alignment="center" inset="2" id="CQv-xo-JU6">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="adjustQuantum:" target="Voe-Tx-rLC" id="dEa-Jx-Ifp"/>
+                                    </connections>
+                                </button>
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="34k-6u-5Mz">
+                                    <rect key="frame" x="67" y="7" width="57" height="37"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" title="1/2s" bezelStyle="regularSquare" imagePosition="below" alignment="center" inset="2" id="wKA-ro-DkQ">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="adjustQuantum:" target="Voe-Tx-rLC" id="UD5-DB-4IU"/>
+                                    </connections>
+                                </button>
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sok-23-B2p">
+                                    <rect key="frame" x="120" y="7" width="57" height="37"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" title="1/4s" bezelStyle="regularSquare" imagePosition="below" alignment="center" inset="2" id="WmG-rB-3GJ">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="adjustQuantum:" target="Voe-Tx-rLC" id="jUE-4R-qDJ"/>
+                                    </connections>
+                                </button>
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tLN-Nk-eWg">
+                                    <rect key="frame" x="182" y="7" width="57" height="37"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <buttonCell key="cell" type="radio" title="1/8s" bezelStyle="regularSquare" imagePosition="below" alignment="center" state="on" inset="2" id="Cms-KJ-3lz">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <connections>
+                                        <action selector="adjustQuantum:" target="Voe-Tx-rLC" id="cfy-KY-yDr"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </view>
+                    </box>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CLh-D7-bpS">
+                        <rect key="frame" x="36" y="323" width="202" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Instructions per quantum" placeholderString="Instructions per quantum" id="oJc-9d-PIx">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
         </window>
@@ -273,7 +361,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <size key="minSize" width="465" height="270"/>
-                                    <size key="maxSize" width="465" height="10000000"/>
+                                    <size key="maxSize" width="482" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
                             </subviews>

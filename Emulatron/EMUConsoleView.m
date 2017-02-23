@@ -14,14 +14,15 @@
 
     NSString* newString;
     
-    if(self.string.length>4096){
-        NSString* temp = [self.string substringFromIndex:512];
+    if(self.string.length>_maxChar){
+        NSString* temp = [self.string substringFromIndex:_maxChar];
         newString = [temp stringByAppendingString:output];
     }else{
         newString = [self.string stringByAppendingString:output];
-    }
+     }
     
     self.string =newString;
+    printf("%s",[output UTF8String]);
 }
 
 -(void)delete:(id)sender{

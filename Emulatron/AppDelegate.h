@@ -16,7 +16,9 @@
 
 
 -(IBAction)closeDisassemblerWindow:(id)sender;
-    
+
+-(IBAction)adjustIPQ:(id)sender;
+-(IBAction)adjustQuantum:(id)sender;
 
 @end
 

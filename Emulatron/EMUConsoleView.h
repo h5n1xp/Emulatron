@@ -10,7 +10,7 @@
 
 @interface EMUConsoleView : NSTextView 
 
-@property (nonatomic) NSInteger charCount;
+@property (nonatomic) NSInteger maxChar;
 
 -(void)setCout:(NSString*)output;
 

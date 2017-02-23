@@ -29,7 +29,7 @@
 
 -(void)callFunction:(NSInteger)lvo{
     
-    self.execLibrary.debugOutput.cout = [NSString stringWithFormat:@"Calling %s LVO:%d - ",self.libNameString,(int)lvo];
+    self.execLibrary.debugOutput.cout = [NSString stringWithFormat:@"%s calling %s LVO:%d - ",self.execLibrary.runningTask,self.libNameString,(int)lvo];
     
     switch(lvo){
         case   6:[self open];break;
@@ -56,15 +56,23 @@
 
 -(uint32_t)createProc:(unsigned char*)name priority:(char)pri segList:(uint32_t)segList stackSize:(uint32_t)stackSize{
     
+    //Convoltued way to get the process name into the emulator memory
+    uint32_t nameLen =(uint32_t)strlen(name);
+    uint32_t strPtr =[self.execLibrary allocMem:nameLen with:MEMF_FAST];
+    [self writeString:name toAddress:strPtr];
+    
     //Allocate Memory for Process control block and Stack
     self.execLibrary.debugOutput.cout =@"\nNeed 228 bytes for Process Control Block\n";
     uint32_t taskStructure = [self.execLibrary allocMem:228 with:4];
     self.execLibrary.debugOutput.cout =[NSString stringWithFormat:@"Need %d bytes for process stack\n",stackSize];
-    uint32_t taskStackLower     = [self.execLibrary allocMem:stackSize with:4];
+    uint32_t taskStackLower     = [self.execLibrary allocMem:stackSize+4096 with:4]; //add on a safety buffer of 4k above the stack
     
-    uint32_t nameLen =(uint32_t)strlen(name);
-    uint32_t strPtr =[self.execLibrary allocMem:nameLen with:MEMF_FAST];
-    [self writeString:name toAddress:strPtr];
+    WRITE_LONG(_emulatorMemory, taskStructure+10, strPtr);   //set the task name
+    
+    //set the top 8 bytes of the stack to 0, so any unexpected rts will point PC to 0 and be captured by the bounce function.
+    WRITE_LONG(_emulatorMemory, taskStackLower+stackSize-4, 0x0);
+    WRITE_LONG(_emulatorMemory, taskStackLower+stackSize-8, 0x0);
+    stackSize -=4;
     
     //build a task structure for exec
     WRITE_BYTE(_emulatorMemory, taskStructure+9, pri);
@@ -135,7 +143,7 @@
             uint32_t previousSegment = hunkAddress[i-1];
             WRITE_LONG(_emulatorMemory,previousSegment-4,currentSegment-4); //Write the next Hunk address to the top of the previous hunk... to create a seglist.
         }
-        WRITE_LONG(_emulatorMemory,currentSegment-4,0xDEADC0DE);            //Null out the current segment's next hunk pointer.
+        WRITE_LONG(_emulatorMemory,currentSegment-4,0x0);            //Null out the current segment's next hunk pointer.
         
         totalRamNeeded+=RAMSize;
         

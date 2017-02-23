@@ -10,6 +10,8 @@
 #import "EMUConsoleView.h"
 #include "m68k.h"
 #include "endianMacros.h"
+#include "EMUexecNode.h"
+
 
 #define MEMF_ANY        0           // Any type of memory will do
 #define MEMF_PUBLIC     1

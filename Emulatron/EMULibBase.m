@@ -19,16 +19,12 @@
 -(void)buildJumpTableSize:(NSInteger)lvocount{
     
     uint32_t offset =self.base;
-    
-    WRITE_WORD(_emulatorMemory, self.base  , 0xDEAD);
-    WRITE_WORD(_emulatorMemory, self.base-2, 0xDE0D);
-    WRITE_WORD(_emulatorMemory, self.base-4, 0xDE1D);
-    
+
     for(NSInteger i=1;i<lvocount;++i){
         offset = offset - 6;
         WRITE_WORD(    _emulatorMemory, offset  , 0x4E70);   // CALL Function
-        WRITE_WORD(    _emulatorMemory, offset-2, 0x4E75);   // RTS return from function call
-        *((uint16_t*) &_emulatorMemory[ offset-4]) = i*6;    // Load the third word with LVO value;
+        WRITE_WORD(    _emulatorMemory, offset+2, 0x4E75);   // RTS return from function call
+        *((uint16_t*) &_emulatorMemory[ offset+4]) = i*6;    // Load the third word with LVO value - note little endian value;
         //printf("address:%X value:%d\n",offset,(int)i*6);
     }
     

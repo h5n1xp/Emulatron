@@ -198,18 +198,17 @@ void cpu_instr_callback(){
     pc = m68k_get_reg(NULL, M68K_REG_PC);
     instr_size = m68k_disassemble(buff, pc, M68K_CPU_TYPE_68000);
     make_hex(buff2, pc, instr_size);
-    //printf("E %03x: %-20s: %s\n", pc, buff2, buff);
     _emualtorInstance.disassemblerOutput.cout =[NSString stringWithFormat:@"E %03x: %-20s: %s\n", pc, buff2, buff];
     fflush(stdout);
     
 }
 
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                            //
+//                                                                                                            //
+//                                                                                                            //
+//                                                                                                            //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 @implementation Emulator
 
 -(Emulator*)init{
@@ -237,194 +236,7 @@ void cpu_instr_callback(){
     return self;
 }
 
--(void)loadFile:(NSData*)file called:(NSString*)name{
-    _execLibrary.M68KState=M68KSTATE_STOPPED;
-    
-    self.debugOutput.cout =[NSString stringWithFormat:@"\nEmulatron LoadSeg mk1: loading %s\n",[name UTF8String]];
-    
-    uint8_t* data =(uint8_t*)file.bytes;
-    
-    if(READ_LONG(data, 0) != HUNK_HEADER){
-         self.debugOutput.cout =@"File is not executable\n";
-        return;
-    }
-    
-    if(READ_LONG(data, 4) != 0x0){
-         self.debugOutput.cout =@"File corrupt\n";
-        return;
-    }
-    
-    uint32_t totalHunks = READ_LONG(data,  8);
-    uint32_t currentHunk= READ_LONG(data, 12);    //Should be zero for executable files,
-    //uint32_t lastHunk   = READ_LONG(data, 16);
-    uint32_t hunkLoc    = 0;
-    uint32_t totalRamNeeded = 0;
-    
-    uint32 hunkPointer = 20;
-    //allocate ram for each hunk
-    self.debugOutput.cout =[NSString stringWithFormat:@"Hunk Table [%d]\n",totalHunks];
-    uint32_t hunkAddress[totalHunks]; //an array which points to the memory address of each memory hunk.
-    
-    for(int i=0;i<totalHunks;++i){
-        
-        uint32_t RAMType = (READ_LONG(data, hunkPointer)   & 0xC0000000) >> 30;
-        uint32_t RAMTag = 0;
-        switch (RAMType) {
-            case 0:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram (prefered) or chip ram using ",i];RAMTag=4;break;
-            case 1:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: chip ram or fail using ",i];RAMTag=2;break;
-            case 2:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram or fail using ",i];RAMTag=4;break;
-            case 3:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: some ram tag I don't know! using ",i];break;
-        }
-        uint32_t RAMSize = (READ_LONG(data, hunkPointer)*4)& 0x3FFFFFFF;hunkPointer+=4;
-        RAMSize +=4; //add 4 bytes to hold the address of the next segment
-        
-        hunkAddress[i]=[self.execLibrary allocMem:RAMSize with:RAMTag]+4;  //The memory allocated is 4bytes too big, so the address we need is 4bytes into the memory allocation.
-        
-        uint32_t currentSegment =hunkAddress[i];
-        if(i !=0){
-            uint32_t previousSegment = hunkAddress[i-1];
-            WRITE_LONG(_emulatorMemory,previousSegment-4,currentSegment-4); //Write the next Hunk address to the top of the previous hunk... to create a seglist.
-        }
-        WRITE_LONG(_emulatorMemory,currentSegment-4,0xDEADC0DE);            //Null out the current segment's next hunk pointer.
-        
-        totalRamNeeded+=RAMSize;
-        
-        hunkLoc = hunkLoc + RAMSize + 4; //(put a 4 byte between hunks to keep them apart)
-        
-        //self.debugOutput.cout =[NSString stringWithFormat:@"0x%X (%d bytes)\n",hunkAddress[i],RAMSize];
-        
 
-        
-    }
-    self.debugOutput.cout =[NSString stringWithFormat:@"\ntotal Ram needed:%d\n\n",totalRamNeeded];
-    
-    // Hunk header read, now time to load the code and data hunks into RAM.
-    while(hunkPointer<file.length){
-        uint32_t hunkType   =  READ_LONG(data, hunkPointer) & 0x3FFFFFFF;hunkPointer+=4;//Mask out any memory type flags (everything goes into fast ram for now)
-        uint32_t hunkSize   = 0;
-        uint32_t memPointer = 0;
-        
-        switch(hunkType){
-                
-            case HUNK_CODE:
-                hunkSize   = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-                memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
-                
-                //copy data to ram
-                for(int j=0;j<hunkSize;++j){
-                    _emulatorMemory[memPointer+j] =data[hunkPointer+j];
-                }
-                
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes(hunk_code) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
-                hunkPointer+=hunkSize;
-                
-                //Check if this code hunk has a reloc32 block;
-                hunkType = READ_LONG(data, hunkPointer);
-                
-                if(hunkType==HUNK_RELOC32){
-                    hunkPointer+=4;
-                    uint32_t numberOfOffsets=0;
-                    
-                    do{
-                        //quite neat as this catches the hunk_end symbol and moves quietly on...
-                        numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
-                        uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
-                        if(numberOfOffsets>0){
-                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
-                        }
-                        
-                        for(int j=0;j<numberOfOffsets;++j){
-                            uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
-                            uint32_t currentValueAtOffset = READ_LONG(_emulatorMemory, memPointer+offset);
-                            currentValueAtOffset += valueToAdd;
-                            WRITE_LONG(_emulatorMemory, memPointer+offset,currentValueAtOffset);
-                            //printf("Offset %d: %d\n",offset,currentValueAtOffset);
-                        }
-                        
-                    }while(numberOfOffsets>0);
-                    
-                    self.debugOutput.cout =@"\n";
-
-                
-                }
-                
-                printf("");
-                break;
-                
-            case HUNK_DATA:
-                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-                memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
-                
-                //copy data to ram
-                for(int j=0;j<hunkSize;++j){
-                    _emulatorMemory[memPointer+j] =data[hunkPointer+j];
-                }
-                
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_data) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
-                hunkPointer+=hunkSize;
-                
-                //Check if this data hunk has a reloc32 block;
-                hunkType = READ_LONG(data, hunkPointer);
-                
-                if(hunkType==HUNK_RELOC32){
-                    hunkPointer+=4;
-                    uint32_t numberOfOffsets=0;
-                    
-                    do{
-                        //quite neat as this catches the hunk_end symbol and moves quietly on...
-                        numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
-                        uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
-                        if(numberOfOffsets>0){
-                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
-                        }
-                        
-                        for(int j=0;j<numberOfOffsets;++j){
-                            uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
-                            uint32_t currentValueAtOffset = READ_LONG(_emulatorMemory, memPointer+offset);
-                            currentValueAtOffset += valueToAdd;
-                            WRITE_LONG(_emulatorMemory, memPointer+offset,currentValueAtOffset);
-                            //printf("Offset %d: %d\n",offset,currentValueAtOffset);
-                        }
-                        
-                    }while(numberOfOffsets>0);
-                    
-                    self.debugOutput.cout =@"\n";
-                }
-                
-                
-                break;
-                
-            case HUNK_DEBUG:
-                //Do nothing with Debug hunks, just skip over them.
-                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-                hunkPointer+=hunkSize;
-                break;
-                
-            case HUNK_BSS:
-                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
-                currentHunk++;
-                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_bss)\n",currentHunk-1,hunkSize];
-                break;
-                
-            case HUNK_END:
-                //ignore end hunks
-                break;
-                
-                
-            default:
-                self.debugOutput.cout =[NSString stringWithFormat:@"Unsupported hunk type %d\n",hunkType];
-                break;
-        }
-        
-    }
-    
-    m68k_set_reg(M68K_REG_PC, (uint32_t)hunkAddress[0]);
-
-    char* mem =&_emulatorMemory[hunkAddress[7]];
-
-    self.debugOutput.cout =@"Emulation started...!\n\n";
-    _execLibrary.M68KState=M68KSTATE_READY;
-}
 
 -(void)restartCPU{
     m68k_pulse_reset();
@@ -503,7 +315,8 @@ void cpu_instr_callback(){
     
     //Kick the emulation off!
     _execLibrary.M68KState=M68KSTATE_STOPPED;     //but don't let it run until we have some code loaded
-    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:YES];
+    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:NO];
+    _ticks=0;
     
     WRITE_WORD(_emulatorMemory,0, 0x4E70); //trap execution from address 0...
     WRITE_WORD(_emulatorMemory,2, 0x4E70); //trap execution from address 2...
@@ -517,6 +330,10 @@ void cpu_instr_callback(){
 -(void)execute:(NSTimer*)timer{
     //called once every quantum by the timer
     
+    _ticks += 1;
+    
+    self.execLibrary.elapsed=_ticks;
+    
     if(_execLibrary.M68KState==M68KSTATE_READY){
         _execLibrary.M68KState=M68KSTATE_RUNNING;
         m68k_execute((int)self.instructionsPerQuantum);
@@ -527,6 +344,8 @@ void cpu_instr_callback(){
             _execLibrary.M68KState = M68KSTATE_READY;
         }
     }
+    
+    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:NO];
 
 }
 
@@ -540,13 +359,24 @@ void cpu_instr_callback(){
    // uint32_t SR = m68k_get_reg(NULL, M68K_REG_SR);
    // m68k_set_reg(M68K_REG_SR, SR | 0x1000);
     
-    if(pc==2){
-            self.debugOutput.cout =@"\nEmulation Terminated... no more tasks to run\n";
+    if(pc<4){
+        
+        uint32_t currentTask = self.execLibrary.thisTask;
+        
+        if(currentTask==0){
+            m68k_set_reg(M68K_REG_PC, 0);
+            return;
+        }
+
+        self.debugOutput.cout =[NSString stringWithFormat:@"\nTask: %s Terminated...\n",self.execLibrary.runningTask];
+        [self.execLibrary remTask:currentTask];
+        _execLibrary.M68KState=M68KSTATE_READY;
         return;
     }
     
-    uint16_t lvo =*((uint16_t*) &_emulatorMemory[pc-6]);
+    uint16_t lvo =*((uint16_t*) &_emulatorMemory[pc+2]);
     int lib = pc + lvo - 2;
+
     
     switch(lib){
         case      EXEC_BASE:[self.execLibrary       callFunction:lvo];break;
@@ -566,9 +396,208 @@ void cpu_instr_callback(){
     //Put CPU back into User mode;
    // m68k_set_reg(M68K_REG_SR, SR & 0xFFFFEFFF);
     
-    m68k_set_reg(M68K_REG_PC, pc-4);
+
     _execLibrary.M68KState=M68KSTATE_READY;
 }
 
+
+
+
+
+
+
+
+
+
+
+// VERY OLD FUNCTION ORIGINALLY USED TO BOOTSTRAP THE EMULATOR
+-(void)loadFile:(NSData*)file called:(NSString*)name{
+    _execLibrary.M68KState=M68KSTATE_STOPPED;
+    
+    self.debugOutput.cout =[NSString stringWithFormat:@"\nEmulatron LoadSeg mk1: loading %s\n",[name UTF8String]];
+    
+    uint8_t* data =(uint8_t*)file.bytes;
+    
+    if(READ_LONG(data, 0) != HUNK_HEADER){
+        self.debugOutput.cout =@"File is not executable\n";
+        return;
+    }
+    
+    if(READ_LONG(data, 4) != 0x0){
+        self.debugOutput.cout =@"File corrupt\n";
+        return;
+    }
+    
+    uint32_t totalHunks = READ_LONG(data,  8);
+    uint32_t currentHunk= READ_LONG(data, 12);    //Should be zero for executable files,
+                                                  //uint32_t lastHunk   = READ_LONG(data, 16);
+    uint32_t hunkLoc    = 0;
+    uint32_t totalRamNeeded = 0;
+    
+    uint32 hunkPointer = 20;
+    //allocate ram for each hunk
+    self.debugOutput.cout =[NSString stringWithFormat:@"Hunk Table [%d]\n",totalHunks];
+    uint32_t hunkAddress[totalHunks]; //an array which points to the memory address of each memory hunk.
+    
+    for(int i=0;i<totalHunks;++i){
+        
+        uint32_t RAMType = (READ_LONG(data, hunkPointer)   & 0xC0000000) >> 30;
+        uint32_t RAMTag = 0;
+        switch (RAMType) {
+            case 0:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram (prefered) or chip ram using ",i];RAMTag=4;break;
+            case 1:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: chip ram or fail using ",i];RAMTag=2;break;
+            case 2:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: fast ram or fail using ",i];RAMTag=4;break;
+            case 3:  self.debugOutput.cout =[NSString stringWithFormat:@"\nHunk %d: some ram tag I don't know! using ",i];break;
+        }
+        uint32_t RAMSize = (READ_LONG(data, hunkPointer)*4)& 0x3FFFFFFF;hunkPointer+=4;
+        RAMSize +=4; //add 4 bytes to hold the address of the next segment
+        
+        hunkAddress[i]=[self.execLibrary allocMem:RAMSize with:RAMTag]+4;  //The memory allocated is 4bytes too big, so the address we need is 4bytes into the memory allocation.
+        
+        uint32_t currentSegment =hunkAddress[i];
+        if(i !=0){
+            uint32_t previousSegment = hunkAddress[i-1];
+            WRITE_LONG(_emulatorMemory,previousSegment-4,currentSegment-4); //Write the next Hunk address to the top of the previous hunk... to create a seglist.
+        }
+        WRITE_LONG(_emulatorMemory,currentSegment-4,0xDEADC0DE);            //Null out the current segment's next hunk pointer.
+        
+        totalRamNeeded+=RAMSize;
+        
+        hunkLoc = hunkLoc + RAMSize + 4; //(put a 4 byte between hunks to keep them apart)
+        
+        //self.debugOutput.cout =[NSString stringWithFormat:@"0x%X (%d bytes)\n",hunkAddress[i],RAMSize];
+        
+        
+        
+    }
+    self.debugOutput.cout =[NSString stringWithFormat:@"\ntotal Ram needed:%d\n\n",totalRamNeeded];
+    
+    // Hunk header read, now time to load the code and data hunks into RAM.
+    while(hunkPointer<file.length){
+        uint32_t hunkType   =  READ_LONG(data, hunkPointer) & 0x3FFFFFFF;hunkPointer+=4;//Mask out any memory type flags (everything goes into fast ram for now)
+        uint32_t hunkSize   = 0;
+        uint32_t memPointer = 0;
+        
+        switch(hunkType){
+                
+            case HUNK_CODE:
+                hunkSize   = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
+                memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
+                
+                //copy data to ram
+                for(int j=0;j<hunkSize;++j){
+                    _emulatorMemory[memPointer+j] =data[hunkPointer+j];
+                }
+                
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes(hunk_code) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
+                hunkPointer+=hunkSize;
+                
+                //Check if this code hunk has a reloc32 block;
+                hunkType = READ_LONG(data, hunkPointer);
+                
+                if(hunkType==HUNK_RELOC32){
+                    hunkPointer+=4;
+                    uint32_t numberOfOffsets=0;
+                    
+                    do{
+                        //quite neat as this catches the hunk_end symbol and moves quietly on...
+                        numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
+                        uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
+                        if(numberOfOffsets>0){
+                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
+                        }
+                        
+                        for(int j=0;j<numberOfOffsets;++j){
+                            uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
+                            uint32_t currentValueAtOffset = READ_LONG(_emulatorMemory, memPointer+offset);
+                            currentValueAtOffset += valueToAdd;
+                            WRITE_LONG(_emulatorMemory, memPointer+offset,currentValueAtOffset);
+                            //printf("Offset %d: %d\n",offset,currentValueAtOffset);
+                        }
+                        
+                    }while(numberOfOffsets>0);
+                    
+                    self.debugOutput.cout =@"\n";
+                    
+                    
+                }
+                
+                printf("");
+                break;
+                
+            case HUNK_DATA:
+                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
+                memPointer = hunkAddress[currentHunk++];//get the address of the current hunk's allocated memory, and advance the current hunk pointer.
+                
+                //copy data to ram
+                for(int j=0;j<hunkSize;++j){
+                    _emulatorMemory[memPointer+j] =data[hunkPointer+j];
+                }
+                
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_data) loaded at 0x%X\n",currentHunk-1,hunkSize,hunkAddress[currentHunk-1]]; //need to subtract from the hunk pointer as I incremented it earlier...
+                hunkPointer+=hunkSize;
+                
+                //Check if this data hunk has a reloc32 block;
+                hunkType = READ_LONG(data, hunkPointer);
+                
+                if(hunkType==HUNK_RELOC32){
+                    hunkPointer+=4;
+                    uint32_t numberOfOffsets=0;
+                    
+                    do{
+                        //quite neat as this catches the hunk_end symbol and moves quietly on...
+                        numberOfOffsets      = (READ_LONG(data, hunkPointer));hunkPointer+=4;
+                        uint32_t valueToAdd  = hunkAddress[READ_LONG(data, hunkPointer)];hunkPointer+=4;
+                        if(numberOfOffsets>0){
+                            self.debugOutput.cout =[NSString stringWithFormat:@"%d offsets in hunk %d which need a pointer to hunk %d\n",numberOfOffsets,currentHunk-1,(READ_LONG(data, hunkPointer-4))];
+                        }
+                        
+                        for(int j=0;j<numberOfOffsets;++j){
+                            uint32_t offset = (READ_LONG(data, hunkPointer));hunkPointer+=4;
+                            uint32_t currentValueAtOffset = READ_LONG(_emulatorMemory, memPointer+offset);
+                            currentValueAtOffset += valueToAdd;
+                            WRITE_LONG(_emulatorMemory, memPointer+offset,currentValueAtOffset);
+                            //printf("Offset %d: %d\n",offset,currentValueAtOffset);
+                        }
+                        
+                    }while(numberOfOffsets>0);
+                    
+                    self.debugOutput.cout =@"\n";
+                }
+                
+                
+                break;
+                
+            case HUNK_DEBUG:
+                //Do nothing with Debug hunks, just skip over them.
+                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
+                hunkPointer+=hunkSize;
+                break;
+                
+            case HUNK_BSS:
+                hunkSize = READ_LONG(data, hunkPointer)*4; hunkPointer+=4; // multiply by 4 to get the number of bytes
+                currentHunk++;
+                self.debugOutput.cout =[NSString stringWithFormat:@"hunk:%d %d bytes (hunk_bss)\n",currentHunk-1,hunkSize];
+                break;
+                
+            case HUNK_END:
+                //ignore end hunks
+                break;
+                
+                
+            default:
+                self.debugOutput.cout =[NSString stringWithFormat:@"Unsupported hunk type %d\n",hunkType];
+                break;
+        }
+        
+    }
+    
+    m68k_set_reg(M68K_REG_PC, (uint32_t)hunkAddress[0]);
+    
+    char* mem =&_emulatorMemory[hunkAddress[7]];
+    
+    self.debugOutput.cout =@"Emulation started...!\n\n";
+    _execLibrary.M68KState=M68KSTATE_READY;
+}
 
 @end

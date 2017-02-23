@@ -20,7 +20,7 @@
 
 -(void)callFunction:(NSInteger)lvo{
     
-    self.execLibrary.debugOutput.cout = [NSString stringWithFormat:@"Calling %s LVO:%d - ",self.libNameString,(int)lvo];
+    self.execLibrary.debugOutput.cout = [NSString stringWithFormat:@"%s calling %s LVO:%d - ",self.execLibrary.runningTask,self.libNameString,(int)lvo];
     
     switch(lvo){
         case  6:[self open];break;

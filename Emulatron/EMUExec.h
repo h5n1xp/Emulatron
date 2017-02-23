@@ -13,7 +13,11 @@
 #define M68KSTATE_READY     10
 #define M68KSTATE_RUNNING   15
 
-@interface EMUExec : EMULibBase
+@interface EMUExec : EMULibBase{
+    uint32_t _elapsed;
+    uint32_t _thisTask;
+    char* _runningTask;
+}
 
 @property  (nonatomic)       NSInteger       M68KState;
 
@@ -27,6 +31,11 @@
 
 -(uint32_t)thisTask;
 -(void)setThisTask:(uint32_t)address;
+
+-(char*)runningTask;
+
+-(uint32_t)elapsed;
+-(void)setElapsed:(uint32_t)value;
 
 -(void)schedule;
 
@@ -45,5 +54,6 @@
 
 
 -(uint32_t)addTask:(uint32_t)taskStruct initPC:(uint32_t)PC finalPC:(uint32_t)finalPC;
+-(void)remTask:(uint32_t)task;
 
 @end

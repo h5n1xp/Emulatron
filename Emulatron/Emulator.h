@@ -25,7 +25,9 @@
 
 
 
-@interface Emulator : NSObject
+@interface Emulator : NSObject{
+    uint32_t _ticks;            //the number of OS Quantums which have occured since starting.
+}
 
 @property (nonatomic,weak) EMUConsoleView* debugOutput;
 @property (nonatomic,weak) EMUConsoleView *disassemblerOutput;
