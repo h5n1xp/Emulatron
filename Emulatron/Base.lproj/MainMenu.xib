@@ -19,7 +19,7 @@
                 <outlet property="DisassemblerWindow" destination="49Z-YD-JbB" id="6Tc-f2-AZI"/>
                 <outlet property="debugOutput" destination="Pnv-72-tUd" id="j9z-51-zN1"/>
                 <outlet property="disassemblerOutput" destination="kDb-ce-MOi" id="qJ2-hP-3lG"/>
-                <outlet property="eightthSecond" destination="tLN-Nk-eWg" id="6zN-eO-xVX"/>
+                <outlet property="eighthSecond" destination="tLN-Nk-eWg" id="Rtd-iw-RYt"/>
                 <outlet property="halfSecond" destination="34k-6u-5Mz" id="Rx4-UN-Hg1"/>
                 <outlet property="instructionsPerQuantumSlider" destination="JmK-uj-qSn" id="cdk-ka-kOM"/>
                 <outlet property="ipqLable" destination="CLh-D7-bpS" id="yxH-AJ-byt"/>
@@ -234,7 +234,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <size key="minSize" width="785" height="263"/>
-                                    <size key="maxSize" width="785" height="10000000"/>
+                                    <size key="maxSize" width="802" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
                             </subviews>

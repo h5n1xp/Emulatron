@@ -15,17 +15,18 @@
 
 @interface EMUExec : EMULibBase{
     uint32_t _elapsed;
+    uint32_t _runningTaskCount;
     uint32_t _thisTask;
     char* _runningTask;
 }
 
 @property  (nonatomic)       NSInteger       M68KState;
 
-@property (nonatomic,strong) NSMutableArray* freeFastList;
-@property (nonatomic,strong) NSMutableArray* freeChipList;
+@property (atomic,strong) NSMutableArray* freeFastList;
+@property (atomic,strong) NSMutableArray* freeChipList;
 
-@property (nonatomic,strong) NSMutableArray* busyFastList;
-@property (nonatomic,strong) NSMutableArray* busyChipList;
+@property (atomic,strong) NSMutableArray* busyFastList;
+@property (atomic,strong) NSMutableArray* busyChipList;
 
 -(void)addlibrary:(id)library;
 
@@ -33,6 +34,7 @@
 -(void)setThisTask:(uint32_t)address;
 
 -(char*)runningTask;
+-(uint32_t)runningTaskCount;
 
 -(uint32_t)elapsed;
 -(void)setElapsed:(uint32_t)value;

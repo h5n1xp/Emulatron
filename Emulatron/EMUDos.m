@@ -7,6 +7,7 @@
 //
 
 #import "EMUDos.h"
+#import "EMUdosProcess.h"
 
 @implementation EMUDos
 
@@ -36,6 +37,8 @@
         case  12:[self close];break;
         case  18:[self expunge];break;
         case  24:[self reserved];break;
+        case  30:[self Open];break;     // <--- note that this is the DOS function open with a capital O
+        case  42:[self read];break;
         case  84:[self lock];break;
         case  90:[self unLock];break;
         case 126:[self currentDir];break;
@@ -54,6 +57,21 @@
 }
 //Obj-C interface  *******************************************************************
 
+
+-(uint32_t)currentDir:(uint32_t)lock{
+    
+    //ignore lock...
+    
+    //ok... nasty hack time, jam the currentDir string into a bit of memory I know isn't currently used... DOS NEEDS A PROPER REWRITE!!!
+    
+    const char* st = [self.currentPath UTF8String];
+    
+    [self writeString:st toAddress:0xA00000];
+    
+    
+    return 0xA00000;
+}
+
 -(uint32_t)createProc:(unsigned char*)name priority:(char)pri segList:(uint32_t)segList stackSize:(uint32_t)stackSize{
     
     //Convoltued way to get the process name into the emulator memory
@@ -64,8 +82,8 @@
     //Allocate Memory for Process control block and Stack
     self.execLibrary.debugOutput.cout =@"\nNeed 228 bytes for Process Control Block\n";
     uint32_t taskStructure = [self.execLibrary allocMem:228 with:4];
-    self.execLibrary.debugOutput.cout =[NSString stringWithFormat:@"Need %d bytes for process stack\n",stackSize];
-    uint32_t taskStackLower     = [self.execLibrary allocMem:stackSize+4096 with:4]; //add on a safety buffer of 4k above the stack
+    self.execLibrary.debugOutput.cout =[NSString stringWithFormat:@"\nNeed %d bytes for process stack\n",stackSize];
+    uint32_t taskStackLower     = [self.execLibrary allocMem:stackSize with:4]; //add on a safety buffer of 4k above the stack
     
     WRITE_LONG(_emulatorMemory, taskStructure+10, strPtr);   //set the task name
     
@@ -74,6 +92,19 @@
     WRITE_LONG(_emulatorMemory, taskStackLower+stackSize-8, 0x0);
     stackSize -=4;
     
+    //Use a Process structure
+    EMUdosProcess* proc = [EMUdosProcess atAddress:taskStructure ofMemory:_emulatorMemory];
+    
+    proc.ln_Priority  = pri;
+    proc.ln_Name      = strPtr;
+    proc.tc_SPReg     = taskStackLower+stackSize;
+    proc.tc_SPLower   = taskStackLower;
+    proc.tc_SPUpper   = taskStackLower+stackSize;
+    proc.pr_SegList   = segList;
+    proc.pr_StackSize = stackSize;
+    proc.pr_StackBase = taskStackLower+stackSize;
+    
+    /* Predates my proper process strucutre
     //build a task structure for exec
     WRITE_BYTE(_emulatorMemory, taskStructure+9, pri);
     WRITE_LONG(_emulatorMemory, taskStructure+10, strPtr);
@@ -85,15 +116,18 @@
     WRITE_LONG(_emulatorMemory, taskStructure+128, segList);
     WRITE_LONG(_emulatorMemory, taskStructure+132, stackSize);
     WRITE_LONG(_emulatorMemory, taskStructure+144, taskStackLower+stackSize);
+    */
     
     [self.execLibrary addTask:taskStructure initPC:segList+4 finalPC:0];
     
-    return taskStructure+92;
+    //return taskStructure+92;
+    return proc.pr_MsgPortPtr;
 }
 
 -(uint32_t)loadSeg:(NSURL*)path{
     
     NSString* pathString = [path absoluteString];
+    self.currentPath =[pathString stringByDeletingLastPathComponent];
     NSString* name =[path lastPathComponent];
     NSData* file = [NSData dataWithContentsOfURL:path];
     
@@ -158,7 +192,7 @@
     
     // Hunk header read, now time to load the code and data hunks into RAM.
     while(hunkPointer<file.length){
-        uint32_t hunkType   =  READ_LONG(data, hunkPointer) & 0x3FFFFFFF;hunkPointer+=4;//Mask out any memory type flags (everything goes into fast ram for now)
+        uint32_t hunkType   =  READ_LONG(data, hunkPointer) & 0x3FFFFFFF;hunkPointer+=4;//Mask out any memory type flags (the ram and required type have all be pre allocated);
         uint32_t hunkSize   = 0;
         uint32_t memPointer = 0;
         
@@ -281,6 +315,20 @@
 }
 
 // 68k Interface *********************************************************************
+
+-(void)Open{
+    uint32_t D1 = m68k_get_reg(NULL, M68K_REG_D1);
+    uint32_t D2 = m68k_get_reg(NULL, M68K_REG_D2);
+    
+    unsigned char* name =&_emulatorMemory[D1];
+    
+    return;
+}
+
+-(void)read{
+    
+}
+
 -(void)lock{
     self.execLibrary.debugOutput.cout =@"lock() not implemented";
 }
@@ -290,7 +338,12 @@
 }
 
 -(void)currentDir{
-    self.execLibrary.debugOutput.cout =@"currentDir() not implemented";
+    uint32_t D1 =m68k_get_reg(NULL, M68K_REG_D1);
+    uint32_t pathPtr = [self currentDir:D1];
+    
+    
+    
+    self.execLibrary.debugOutput.cout =@"currentDir() just returns the last path used";
 }
 
 -(void)ioError{
@@ -314,7 +367,13 @@
 
 -(void)loadSeg{
     //150 $ff6a -$0096 LoadSeg(name)(d1)
+    uint32_t D0 = m68k_get_reg(NULL, M68K_REG_D0);
     
+    
+    char* name = &_emulatorMemory[D0];
+    
+    printf("%s",name);
+    return;
 }
 
 -(void)printFault{

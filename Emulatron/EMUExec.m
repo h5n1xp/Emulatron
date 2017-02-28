@@ -9,6 +9,7 @@
 #import "EMUExec.h"
 #import "EMUMemoryBlock.h"
 #import "EMULibrary.h"
+#import "EMUexecMessagePort.h"
 
 @implementation EMUExec
 
@@ -75,13 +76,15 @@
 }
 
 -(uint32_t)thisTask{
-    return READ_LONG(_emulatorMemory, self.base+276);
+    _thisTask = READ_LONG(_emulatorMemory, self.base+276);
+    return _thisTask;
 }
 -(void)setThisTask:(uint32_t)address{
     
     char* memory = &_emulatorMemory[address];
     
     _thisTask=address;
+    
     uint32_t namePtr = READ_LONG(_emulatorMemory, address+10);
     
     if(namePtr !=0){
@@ -96,6 +99,10 @@
 
 -(char*)runningTask{
     return _runningTask;
+}
+
+-(uint32_t)runningTaskCount{
+    return _runningTaskCount;
 }
 
 -(uint32)elapsed{
@@ -118,36 +125,42 @@ typedef struct{
     
     /*
     char* task =&_emulatorMemory[_thisTask];
-     */
+
     
-    /*
-    uint32_t yy = stackPtr;
+    
+    uint32_t SPBefore = stackPtr;
     context_t* memory =&_emulatorMemory[stackPtr-72];
-    //memory->REG[7]=1;
+    memory->REG[150]=1;
     
     context_t check;
-    check.REG[0] = m68k_get_reg(NULL, M68K_REG_D0);
-    check.REG[1] = m68k_get_reg(NULL, M68K_REG_D1);
-    check.REG[2] = m68k_get_reg(NULL, M68K_REG_D2);
-    check.REG[3] = m68k_get_reg(NULL, M68K_REG_D3);
-    check.REG[4] = m68k_get_reg(NULL, M68K_REG_D4);
-    check.REG[5] = m68k_get_reg(NULL, M68K_REG_D5);
-    check.REG[6] = m68k_get_reg(NULL, M68K_REG_D6);
-    check.REG[7] = m68k_get_reg(NULL, M68K_REG_D7);
-    
-    check.REG[8] = m68k_get_reg(NULL, M68K_REG_A0);
-    check.REG[9] = m68k_get_reg(NULL, M68K_REG_A1);
-    check.REG[10] = m68k_get_reg(NULL, M68K_REG_A2);
-    check.REG[11] = m68k_get_reg(NULL, M68K_REG_A3);
-    check.REG[12] = m68k_get_reg(NULL, M68K_REG_A4);
-    check.REG[13] = m68k_get_reg(NULL, M68K_REG_A5);
-    check.REG[14] = m68k_get_reg(NULL, M68K_REG_A6);
-    check.REG[15] = m68k_get_reg(NULL, M68K_REG_A7);
-    
-    check.REG[16] = m68k_get_reg(NULL, M68K_REG_SR);
+     
     check.REG[17] = m68k_get_reg(NULL, M68K_REG_PC);
-    */
+    check.REG[16] = m68k_get_reg(NULL, M68K_REG_SR);
+     
+    check.REG[15] = m68k_get_reg(NULL, M68K_REG_D0);
+    check.REG[14] = m68k_get_reg(NULL, M68K_REG_D1);
+    check.REG[13] = m68k_get_reg(NULL, M68K_REG_D2);
+    check.REG[12] = m68k_get_reg(NULL, M68K_REG_D3);
+    check.REG[11] = m68k_get_reg(NULL, M68K_REG_D4);
+    check.REG[10] = m68k_get_reg(NULL, M68K_REG_D5);
+    check.REG[9] = m68k_get_reg(NULL, M68K_REG_D6);
+    check.REG[8] = m68k_get_reg(NULL, M68K_REG_D7);
     
+    check.REG[7] = m68k_get_reg(NULL, M68K_REG_A0);
+    check.REG[6] = m68k_get_reg(NULL, M68K_REG_A1);
+    check.REG[5] = m68k_get_reg(NULL, M68K_REG_A2);
+    check.REG[4] = m68k_get_reg(NULL, M68K_REG_A3);
+    check.REG[3] = m68k_get_reg(NULL, M68K_REG_A4);
+    check.REG[2] = m68k_get_reg(NULL, M68K_REG_A5);
+    check.REG[1] = m68k_get_reg(NULL, M68K_REG_A6);
+    check.REG[0] = m68k_get_reg(NULL, M68K_REG_A7);
+    */
+
+
+    
+    
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_PC));
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
     
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D0));
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_D1));
@@ -167,8 +180,9 @@ typedef struct{
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A6));
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_A7));
 
-    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
-    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_PC));
+    //Used to identify where the registers are saved on the stack
+    //memory->REG[15]=1;
+    //uint32_t readBack = _emulatorMemory[stackPtr+60];
     
     WRITE_LONG(_emulatorMemory,self.thisTask+54,stackPtr);
     
@@ -179,8 +193,8 @@ typedef struct{
 -(void)restoreContext{
     uint32_t stackPtr = READ_LONG(_emulatorMemory,self.thisTask+54);
     
-    m68k_set_reg(M68K_REG_PC,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
-    m68k_set_reg(M68K_REG_SR,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+
+
     
     m68k_set_reg(M68K_REG_A7,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
     m68k_set_reg(M68K_REG_A6,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
@@ -199,6 +213,9 @@ typedef struct{
     m68k_set_reg(M68K_REG_D2,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
     m68k_set_reg(M68K_REG_D1,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
     m68k_set_reg(M68K_REG_D0,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    
+    m68k_set_reg(M68K_REG_SR,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
+    m68k_set_reg(M68K_REG_PC,READ_LONG(_emulatorMemory,stackPtr));stackPtr +=4;
     
     /*
     context_t check;
@@ -603,6 +620,9 @@ typedef struct{
 
 -(uint32_t)addTask:(uint32_t)taskStruct initPC:(uint32_t)PC finalPC:(uint32_t)finalPC{
     
+    
+    _runningTaskCount += 1;
+    
     [self enqueue:taskStruct inList:self.base+406]; //Add to the ready list;
     
     //if we are the first task being added to the chain...
@@ -622,6 +642,9 @@ typedef struct{
     uint32_t stackPtrS= READ_LONG(_emulatorMemory,taskStruct+62);
     uint32_t stackPtr=stackPtrS;
     
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, PC);
+    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
+    
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
@@ -639,9 +662,7 @@ typedef struct{
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, 0);
     stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, stackPtrS);
-    
-    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, m68k_get_reg(NULL, M68K_REG_SR));
-    stackPtr -=4;WRITE_LONG(_emulatorMemory,stackPtr, PC);
+
     
     WRITE_LONG(_emulatorMemory,taskStruct+54,stackPtr);
     
@@ -651,6 +672,8 @@ typedef struct{
 }
 
 -(void)remTask:(uint32_t)task{
+    
+    _runningTaskCount -= 1;
     
     [self remove:task];
     if(self.thisTask==task){
@@ -670,11 +693,13 @@ typedef struct{
     
     if( (sigReceived & sigWait) != 0){
         
+        _runningTaskCount -= 1;
+        
         [self remove:task];                         //take task out of the waiting list
         [self enqueue:task inList:self.base+406];   //add task to ready list.
         
         //Set the saved context D0 register to the signals, as it will see them when it wakes up!
-        WRITE_LONG(_emulatorMemory, (READ_LONG(_emulatorMemory,task+54)+68), sigReceived); //Write sigReceived to D0 on the stack (D1 is at +64)...
+        WRITE_LONG(_emulatorMemory, (READ_LONG(_emulatorMemory,task+54)+60), sigReceived); //Write sigReceived to D0 on the stack (D1 is at +56,D2 is at +52 etc)...
         
         //Clear the Waiting signals (currently this just clears all the sig fields, but really should only clear the waiting ones received)
         WRITE_LONG(_emulatorMemory, task+22,0);
@@ -729,15 +754,19 @@ typedef struct{
         }
     }
     
+
+    
     char nextPri  = READ_BYTE(_emulatorMemory, nextTask+9);
     
     //if the next task is suitable for running... swap context
     if(nextPri >= thisPri){
+        self.M68KState=M68KSTATE_STOPPED;
         m68k_end_timeslice();   //Tell the 68k to finish executing any instructions.
         [self saveContext];
         self.thisTask = nextTask;
         printf("\nTask Switch %d: to %s\n",_elapsed,_runningTask);
         [self restoreContext];
+        self.M68KState=M68KSTATE_READY;
     }
     
 }
@@ -921,7 +950,10 @@ typedef struct{
 
 -(void)waitPort{
     uint32_t A0 = m68k_get_reg(NULL, M68K_REG_A0);
-    char* portName = &_emulatorMemory[A0];
+    
+    unsigned char* memMsgPrt=&_emulatorMemory[A0];
+    EMUexecMessagePort* port =[EMUexecMessagePort atAddress:A0 ofMemory:_emulatorMemory];
+    
     self.debugOutput.cout =@"waitPort()... not implemented";
     return;
 }

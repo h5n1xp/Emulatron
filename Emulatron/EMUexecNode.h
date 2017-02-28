@@ -7,32 +7,37 @@
 //
 
 #import <Foundation/Foundation.h>
+#include "endianMacros.h"
 
 @interface EMUexecNode : NSObject{
     
-    uint32_t       _next;
-    uint32_t       _prev;
-    unsigned char  _type;
-    char           _priority;
-    uint32_t       _name;
-    uint32_t       _list;
-    unsigned char* _nodeName;
+    unsigned char* _memory;
+    
+    uint32_t       _ln_Succ;
+    uint32_t       _ln_Pred;
+    unsigned char  _ln_Type;
+    char           _ln_Priority;
+    uint32_t       _ln_Name;
+    uint32_t       _list;           // a node should be able it identify which list it blongs to
+    unsigned char* _nodeName;       // if it has a name, I want to know
     
 }
 
 @property (nonatomic) uint32_t address;
 
-+(EMUexecNode*)nodeAtAddress:(uint32_t)nodeAddress;
++(instancetype)atAddress:(uint32_t)nodeAddress ofMemory:(unsigned char*)memory;
 
--(uint32_t)next;
--(void)setNext:(uint32_t)nextAddress;
--(uint32_t)prev;
--(void)setPrev:(uint32_t)prevAddress;
--(unsigned char)type;
--(void)setType:(unsigned char)type;
--(char)priority;
--(void)setPriority:(char)priority;
--(uint32_t)name;
--(void)setName:(uint32_t)nameAddress;
+-(uint32_t)ln_Succ;
+-(void)setLn_Succ:(uint32_t)nextAddress;
+-(uint32_t)ln_Pred;
+-(void)setLn_Pred:(uint32_t)prevAddress;
+-(unsigned char)ln_Type;
+-(void)setLn_Type:(unsigned char)type;
+-(char)ln_Priority;
+-(void)setLn_Priority:(char)priority;
+-(uint32_t)ln_Name;
+-(void)setLn_Name:(uint32_t)nameAddress;
+
+-(uint32_t)listPtr;
 
 @end

@@ -26,7 +26,7 @@
 #define MATHTRANS_BASE     0xEF5800 // 4K below
 #define EXPANSION_BASE     0xEF4800 // 4K below
 
-//Load Seg defines... probably shouldn't be in this object... should be in EMUDos
+//Load Seg defines... Shouldn't be in this object... should be in EMUDos
 #define HUNK_UNIT           0999
 #define HUNK_NAME           1000
 #define HUNK_CODE           1001
@@ -318,6 +318,10 @@ void cpu_instr_callback(){
     self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:NO];
     _ticks=0;
     
+    
+    //Start the system clock!
+    [NSTimer scheduledTimerWithTimeInterval:4/50 target:self selector:@selector(fiftyHertzTimer:) userInfo:nil repeats:NO];
+    
     WRITE_WORD(_emulatorMemory,0, 0x4E70); //trap execution from address 0...
     WRITE_WORD(_emulatorMemory,2, 0x4E70); //trap execution from address 2...
 }
@@ -328,25 +332,42 @@ void cpu_instr_callback(){
 }
 
 -(void)execute:(NSTimer*)timer{
+
+    if(_execLibrary.M68KState==M68KSTATE_READY){
+        _execLibrary.M68KState=M68KSTATE_RUNNING;
+        m68k_execute((int)self.instructionsPerQuantum);
+        
+        if(_execLibrary.M68KState !=M68KSTATE_STOPPED){
+            _execLibrary.M68KState = M68KSTATE_READY;
+        }
+    }else if(_execLibrary.M68KState==M68KSTATE_THROTTLED){
+        [NSThread sleepForTimeInterval:2/50];
+    }
+  
+    
+    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:NO];
+
+}
+
+
+-(void)fiftyHertzTimer:(NSTimer*)timer{
+    
     //called once every quantum by the timer
     
     _ticks += 1;
     
     self.execLibrary.elapsed=_ticks;
     
-    if(_execLibrary.M68KState==M68KSTATE_READY){
-        _execLibrary.M68KState=M68KSTATE_RUNNING;
-        m68k_execute((int)self.instructionsPerQuantum);
-        
+    if(_execLibrary.M68KState == M68KSTATE_RUNNING){
         [_execLibrary schedule];
-        
-        if(_execLibrary.M68KState !=M68KSTATE_STOPPED){
-            _execLibrary.M68KState = M68KSTATE_READY;
-        }
     }
     
-    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:self.quantum target:self selector:@selector(execute:) userInfo:nil repeats:NO];
-
+    //if there are no running tasks... then slow the emulator down.
+    if(_execLibrary.runningTaskCount<1){
+        _execLibrary.M68KState = M68KSTATE_THROTTLED;
+    }
+    
+    self.executionTimer = [NSTimer scheduledTimerWithTimeInterval:4/50 target:self selector:@selector(fiftyHertzTimer:) userInfo:nil repeats:NO];
 }
 
 -(void)bounce{
@@ -399,6 +420,24 @@ void cpu_instr_callback(){
 
     _execLibrary.M68KState=M68KSTATE_READY;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

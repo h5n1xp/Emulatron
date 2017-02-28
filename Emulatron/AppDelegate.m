@@ -96,21 +96,22 @@
 
     
     //NSURL* fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/Sysinfo/SysInfo"];
+    
 
     uint32_t segList = [self.amiga.dosLibrary loadSeg:fileURL];
     NSString* path = [fileURL absoluteString];
     NSString* name = [path lastPathComponent];
     [self.amiga.dosLibrary createProc:[name UTF8String] priority:0 segList:segList stackSize:4096];
     
-    //Allocate a nice lump of memory to keep Dpaint away from clock
+    //Allocate a nice lump of memory to keep Dpaint away from clock, so it is easier to see which task is running from their addesses
     [self.amiga.execLibrary allocMem:1045504 with:4];
     
     fileURL =[NSURL URLWithString:@"file:///Users/Shared/uae/540/Work/DELUXEPAINT_IV/Dpaint"];
     segList = [self.amiga.dosLibrary loadSeg:fileURL];
     path = [fileURL absoluteString];
     name = [path lastPathComponent];
-    [self.amiga.dosLibrary createProc:[name UTF8String] priority:-1 segList:segList stackSize:4096];
-    
+    [self.amiga.dosLibrary createProc:[name UTF8String] priority:0 segList:segList stackSize:4096];
+
     
    // NSData* data = [NSData dataWithContentsOfURL:fileURL];
    // [self.amiga loadFile:data called:[[fileURL absoluteString] lastPathComponent]];

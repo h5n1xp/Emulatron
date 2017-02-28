@@ -7,29 +7,30 @@
 //
 
 #import "EMUexecNode.h"
-#include "endianMacros.h"
+
 extern unsigned char* _emulatorMemory;   //Nasty global variable
 
 @implementation EMUexecNode
 
-+(EMUexecNode*)nodeAtAddress:(uint32_t)nodeAddress{
++(instancetype)atAddress:(uint32_t)nodeAddress ofMemory:(unsigned char *)memory{
     EMUexecNode* retVal = [[super alloc] init];
     
-    retVal.address   = nodeAddress;
-    retVal->_next    = READ_LONG(_emulatorMemory, nodeAddress);
-    retVal->_prev    = READ_LONG(_emulatorMemory, nodeAddress+4);
-    retVal->_type    = READ_BYTE(_emulatorMemory, nodeAddress+8);
-    retVal->_priority= READ_BYTE(_emulatorMemory, nodeAddress+9);
-    retVal->_name    = READ_LONG(_emulatorMemory, nodeAddress+10);
-    retVal->_nodeName = &_emulatorMemory[retVal->_name];
+    retVal.address       = nodeAddress;
+    retVal->_memory      = memory;
+    retVal->_ln_Succ     = READ_LONG(memory, nodeAddress);
+    retVal->_ln_Pred     = READ_LONG(memory, nodeAddress+4);
+    retVal->_ln_Type     = READ_BYTE(memory, nodeAddress+8);
+    retVal->_ln_Priority = READ_BYTE(memory, nodeAddress+9);
+    retVal->_ln_Name     = READ_LONG(memory, nodeAddress+10);
+    retVal->_nodeName    = &_emulatorMemory[retVal->_ln_Name];
     
     //track back through the list until we find the list header.
-    uint32_t prevNode=retVal->_prev;
-    uint32_t useNode=retVal->_prev;
+    uint32_t prevNode=retVal->_ln_Pred;
+    uint32_t useNode=retVal->_ln_Pred;
         
     while (prevNode !=0) {
         useNode=prevNode;
-        prevNode=READ_LONG(_emulatorMemory, prevNode+4);
+        prevNode=READ_LONG(memory, prevNode+4);
     }
     //useNode since only the list header can have 0 for a prevNode, the useNode must be the list header.
 
@@ -38,49 +39,69 @@ extern unsigned char* _emulatorMemory;   //Nasty global variable
     return retVal;
 }
 
--(uint32_t)next{
-    return READ_LONG(_emulatorMemory,self.address);
+-(uint32_t)ln_Succ{
+    _ln_Succ =READ_LONG(_memory,_address);
+    return _ln_Succ;
 }
 
--(void)setNext:(uint32_t)nextAddress{
-    _next = nextAddress;
-    WRITE_LONG(_emulatorMemory,self.address,nextAddress);
+-(void)setLn_Succ:(uint32_t)nextAddress{
+    _ln_Succ = nextAddress;
+    WRITE_LONG(_memory,_address,nextAddress);
 }
 
--(uint32_t)prev{
-    return READ_LONG(_emulatorMemory,self.address+4);
+-(uint32_t)ln_Pred{
+    _ln_Pred = READ_LONG(_memory,_address+4);
+    return _ln_Pred;
 }
 
--(void)setPrev:(uint32_t)prevAddress{
-    _prev = prevAddress;
-    WRITE_LONG(_emulatorMemory,self.address+4,prevAddress);
+-(void)setLn_Pred:(uint32_t)prevAddress{
+    _ln_Pred = prevAddress;
+    WRITE_LONG(_memory,_address+4,prevAddress);
 }
 
--(unsigned char)type{
-    return READ_BYTE(_emulatorMemory,self.address+8);
+-(unsigned char)ln_Type{
+    _ln_Type = READ_BYTE(_memory,_address+8);
+    return _ln_Type;
 }
 
--(void)setType:(unsigned char)type{
-    _type = type;
-    WRITE_BYTE(_emulatorMemory,self.address+8,type);
+-(void)setln_Type:(unsigned char)type{
+    _ln_Type = type;
+    WRITE_BYTE(_memory,_address+8,type);
 }
 
--(char)priority{
-    return READ_BYTE(_emulatorMemory,self.address+9);
+-(char)ln_Priority{
+    _ln_Priority =  READ_BYTE(_memory,_address+9);
+    return _ln_Priority;
 }
 
--(void)setPriority:(char)priority{
-    _priority = priority;
-    WRITE_BYTE(_emulatorMemory,self.address+9,priority);
+-(void)setLn_Priority:(char)priority{
+    _ln_Priority = priority;
+    WRITE_BYTE(_memory,_address+9,priority);
 }
 
--(uint32_t)name{
-    return READ_LONG(_emulatorMemory,self.address+10);
+-(uint32_t)ln_Name{
+    _ln_Name = READ_LONG(_memory,_address+10);
+    return _ln_Name;
 }
 
--(void)setName:(uint32_t)nameAddress{
-    _name = nameAddress;
-    WRITE_LONG(_emulatorMemory,self.address+10,nameAddress);
+-(void)setLn_Name:(uint32_t)nameAddress{
+    _ln_Name = nameAddress;
+    WRITE_LONG(_memory,_address+10,nameAddress);
+}
+
+-(uint32_t)listPtr{
+    //track back through the list until we find the list header.
+    uint32_t prevNode=_ln_Pred;
+    uint32_t useNode=_ln_Pred;
+    
+    while (prevNode !=0) {
+        useNode=prevNode;
+        prevNode=READ_LONG(_memory, prevNode+4);
+    }
+    //useNode since only the list header can have 0 for a prevNode, the useNode must be the list header.
+    
+    _list = useNode;
+    return _list;
 }
 
 @end
