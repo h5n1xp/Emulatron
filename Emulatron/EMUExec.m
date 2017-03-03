@@ -46,12 +46,32 @@
     freeFastBlock.attributes = MEMF_FAST;
     [self.freeFastList addObject:freeFastBlock];
     
+    //setup memory list - Not used at this time
+    WRITE_LONG(_emulatorMemory, self.base+322,self.base+326);//headnode is 4bytes below the tail node
+    WRITE_LONG(_emulatorMemory, self.base+330,self.base+322);//the tail node is the list header
+    WRITE_BYTE(_emulatorMemory, self.base+334,10);           //List type is a Memory list.
+    WRITE_BYTE(_emulatorMemory, self.base+335, 0);           //Makes sure the padding byte is clear... I might need to use that as a flag later
+
     
     //setup Library list
-    [self addHead:self.base toList:self.base+378];
-    WRITE_BYTE(_emulatorMemory, self.base+390, 9);          //List type is a Library list.
-    WRITE_BYTE(_emulatorMemory, self.base+391, 0);          //Makes sure the padding byte is clear... I might need to use that as a flag later
-
+    WRITE_LONG(_emulatorMemory, self.base+378,self.base+382);//headnode is 4bytes below the tail node
+    WRITE_LONG(_emulatorMemory, self.base+386,self.base+378);//the tail node is the list header
+    WRITE_BYTE(_emulatorMemory, self.base+390, 9);           //List type is a Library list.
+    WRITE_BYTE(_emulatorMemory, self.base+391, 0);           //Makes sure the padding byte is clear... I might need to use that as a flag later
+    [self addHead:self.base toList:self.base+378];           //Add exec.library to list
+    
+    //setup ready task list
+    WRITE_LONG(_emulatorMemory, self.base+406,self.base+410);//headnode is 4bytes below the tail node
+    WRITE_LONG(_emulatorMemory, self.base+414,self.base+406);//the tail node is the list header
+    WRITE_BYTE(_emulatorMemory, self.base+418, 1);           //List type is a Task list.
+    WRITE_BYTE(_emulatorMemory, self.base+419, 0);           //Makes sure the padding byte is clear... I might need to use that as a flag later
+    
+    //setup waiting task list
+    WRITE_LONG(_emulatorMemory, self.base+420,self.base+424);//headnode is 4bytes below the tail node
+    WRITE_LONG(_emulatorMemory, self.base+428,self.base+420);//the tail node is the list header
+    WRITE_BYTE(_emulatorMemory, self.base+432, 1);           //List type is a Task list.
+    WRITE_BYTE(_emulatorMemory, self.base+433, 0);           //Makes sure the padding byte is clear... I might need to use that as a flag later
+    
     
     //Set up Supervisor Stack
     uint32_t ssp = [self allocMem:16384 with:MEMF_FAST];    //16kb in the Fastram should be fine.
@@ -419,6 +439,31 @@ typedef struct{
 
 -(void)insert:(uint32_t)node behind:(uint32_t)pred inList:(uint32_t)list{
     
+    if(pred==0 || pred == list){
+        [self addHead:node toList:list];
+    }
+    
+    EMUexecList* listHeader = [EMUexecList atAddress:list ofMemory:_emulatorMemory];
+    
+    if(pred == listHeader.lh_TailPred){
+        [self addTail:node toList:list];
+    }
+    
+    EMUexecNode* predNode = [EMUexecNode atAddress:pred             ofMemory:_emulatorMemory];
+    EMUexecNode* succNode = [EMUexecNode atAddress:predNode.ln_Succ ofMemory:_emulatorMemory];
+    EMUexecNode* newNode  = [EMUexecNode atAddress:node             ofMemory:_emulatorMemory];
+    
+    predNode.ln_Succ = node;
+    succNode.ln_Pred = node;
+    
+    newNode.ln_Pred  = pred;
+    newNode.ln_Succ  = succNode.address;
+    
+    return;
+    
+    
+    
+    /*Old code scheduled for deletion.
     uint32_t firstNode = READ_LONG(_emulatorMemory, list);
     
     //if this is a new list then just add head.
@@ -445,11 +490,26 @@ typedef struct{
     
     
     return;
+    */
 }
  
 
 -(void)addHead:(uint32_t)node toList:(uint32_t)list{
     
+    EMUexecList* listHeader = [EMUexecList atAddress:list               ofMemory:_emulatorMemory];
+    EMUexecNode* headNode   = [EMUexecNode atAddress:listHeader.lh_Head ofMemory:_emulatorMemory];
+    EMUexecNode* newNode    = [EMUexecNode atAddress:node               ofMemory:_emulatorMemory];
+    
+
+    newNode.ln_Succ = headNode.address;
+    newNode.ln_Pred = list;
+    
+    listHeader.lh_Head = node;
+    headNode.ln_Pred = node;
+    
+    return;
+    
+    /*Old code scheduled for deletion.
     uint32_t nextNode = READ_LONG(_emulatorMemory,list); //the old head node
     
     WRITE_LONG(_emulatorMemory, list, node);    //the new head node
@@ -462,12 +522,25 @@ typedef struct{
     
     WRITE_LONG(_emulatorMemory, node, nextNode);  //add the old head back into the chain.
     WRITE_LONG(_emulatorMemory, nextNode+4, node);//add the new head before the old head.
-    
+    */
 }
 
 
 -(void)addTail:(uint32_t)node toList:(uint32_t)list{
     
+    EMUexecList* listHeader = [EMUexecList atAddress:list                   ofMemory:_emulatorMemory];
+    EMUexecNode* tailNode   = [EMUexecNode atAddress:listHeader.lh_TailPred ofMemory:_emulatorMemory];
+    EMUexecNode* newNode    = [EMUexecNode atAddress:node                   ofMemory:_emulatorMemory];
+    
+    newNode.ln_Succ = tailNode.ln_Succ;
+    newNode.ln_Pred = tailNode.address;
+    
+    tailNode.ln_Succ       = node;
+    listHeader.lh_TailPred = node;
+    
+    return;
+    
+    /*Old code scheduled for deletion.
     uint32_t tailNode = READ_LONG(_emulatorMemory,list+8);
     
     if(tailNode==0){
@@ -482,11 +555,20 @@ typedef struct{
 
     
     return;
+    */
 }
 
 -(void)remove:(uint32_t)node{
-    uint32_t nextNode = READ_LONG(_emulatorMemory, node);
     
+    EMUexecNode* remNode   = [EMUexecNode atAddress:node            ofMemory:_emulatorMemory];
+    EMUexecNode* succNode  = [EMUexecNode atAddress:remNode.ln_Succ ofMemory:_emulatorMemory];
+    EMUexecNode* predNode  = [EMUexecNode atAddress:remNode.ln_Pred ofMemory:_emulatorMemory];
+
+    
+    
+    /*Old code scheduled for deletion.
+    uint32_t nextNode = READ_LONG(_emulatorMemory, node);
+
     //if this node is the tail
     if(nextNode==0){
         //track back through the list until we find the list header.
@@ -510,6 +592,7 @@ typedef struct{
     WRITE_LONG(_emulatorMemory, newPrevNode, nextNode);
     WRITE_LONG(_emulatorMemory, nextNode+4, newPrevNode);
     return;
+    */
 }
 
 

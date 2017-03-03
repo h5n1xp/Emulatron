@@ -23,12 +23,6 @@
 
 +(instancetype)atAddress:(uint32_t)nodeAddress ofMemory:(unsigned char*)memory;
 
-//The list header and the nodes overlap, so I need these two properties:
--(uint32_t)ln_Succ;
--(void)setLn_Succ:(uint32_t)nextAddress;
--(uint32_t)ln_Pred;
-
-
 -(uint32_t)lh_Head;
 -(void)setLh_Head:(uint32_t)value;
 -(uint32_t)lh_Tail;

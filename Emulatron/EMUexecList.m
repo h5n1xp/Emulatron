@@ -24,7 +24,7 @@
     return retVal;
 }
 
-
+/*
 -(uint32_t)ln_Succ{
     return self.lh_Head;
 }
@@ -36,7 +36,7 @@
 -(uint32_t)ln_Pred{
     return self.lh_Tail;
 }
-
+*/
 
 -(uint32_t)lh_Head{
     _lh_Head = READ_LONG(_memory,self.address);

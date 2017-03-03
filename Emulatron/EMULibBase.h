@@ -11,6 +11,7 @@
 #include "m68k.h"
 #include "endianMacros.h"
 #include "EMUexecNode.h"
+#include "EMUexecList.h"
 
 
 #define MEMF_ANY        0           // Any type of memory will do
