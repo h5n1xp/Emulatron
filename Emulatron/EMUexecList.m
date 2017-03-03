@@ -24,19 +24,22 @@
     return retVal;
 }
 
-/*
+
 -(uint32_t)ln_Succ{
-    return self.lh_Head;
+    return READ_LONG(_memory,_address);
 }
 
--(void)setLn_Succ:(uint32_t)nextAddress{
-    self.lh_Head = nextAddress;
-}
 
 -(uint32_t)ln_Pred{
-    return self.lh_Tail;
+    return READ_LONG(_memory,_address+4);
 }
-*/
+
+
+
+
+-(unsigned char*)base{
+    return _memory;
+}
 
 -(uint32_t)lh_Head{
     _lh_Head = READ_LONG(_memory,self.address);
@@ -53,7 +56,7 @@
 }
 -(void)setLh_Tail:(uint32_t)value{
     _lh_Tail= value;
-    WRITE_LONG(_memory,self.address,value+4);
+    WRITE_LONG(_memory,self.address+4,value);
 }
 
 -(uint32_t)lh_TailPred{
@@ -62,7 +65,7 @@
 }
 -(void)setLh_TailPred:(uint32_t)value{
     _lh_TailPred= value;
-    WRITE_LONG(_memory,self.address,value+8);
+    WRITE_LONG(_memory,self.address+8,value);
 }
 
 -(unsigned char)lh_Type{
@@ -71,7 +74,7 @@
 }
 -(void)setLh_Type:(unsigned char)value{
     _lh_Type= value;
-    WRITE_BYTE(_memory,self.address,value+12);
+    WRITE_BYTE(_memory,self.address+12,value);
 }
 
 

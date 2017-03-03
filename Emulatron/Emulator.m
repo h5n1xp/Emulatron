@@ -309,7 +309,7 @@ void cpu_instr_callback(){
     [self.execLibrary addlibrary:self.mathtransLibrary];
     
     //Setup expansion.library
-    self.expansionLibrary = [[EMUExpansion alloc]initAtAddress:MATHTRANS_BASE];
+    self.expansionLibrary = [[EMUExpansion alloc]initAtAddress:EXPANSION_BASE];
     [self.expansionLibrary buildJumpTableSize:170];
     [self.execLibrary addlibrary:self.expansionLibrary];
     

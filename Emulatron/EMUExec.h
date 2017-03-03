@@ -50,8 +50,8 @@
 -(void)addHead:(uint32_t)node toList:(uint32_t)list;
 -(void)addTail:(uint32_t)node toList:(uint32_t)list;
 -(void)remove:(uint32_t)node;
--(void)remHead:(uint32_t)list;
--(void)remTail:(uint32_t)list;
+-(uint32_t)remHead:(uint32_t)list;
+-(uint32_t)remTail:(uint32_t)list;
 -(void)enqueue:(uint32_t)node inList:(uint32_t)list;
 
 

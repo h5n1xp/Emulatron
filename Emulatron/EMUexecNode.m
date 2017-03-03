@@ -16,27 +16,41 @@ extern unsigned char* _emulatorMemory;   //Nasty global variable
     EMUexecNode* retVal = [[super alloc] init];
     
     retVal.address       = nodeAddress;
-    retVal->_memory      = memory;
-    retVal->_ln_Succ     = READ_LONG(memory, nodeAddress);
-    retVal->_ln_Pred     = READ_LONG(memory, nodeAddress+4);
-    retVal->_ln_Type     = READ_BYTE(memory, nodeAddress+8);
-    retVal->_ln_Priority = READ_BYTE(memory, nodeAddress+9);
-    retVal->_ln_Name     = READ_LONG(memory, nodeAddress+10);
-    retVal->_nodeName    = &_emulatorMemory[retVal->_ln_Name];
+    retVal.base          = memory;
+    retVal.ln_Succ       = READ_LONG(memory, nodeAddress);
+    retVal.ln_Pred       = READ_LONG(memory, nodeAddress+4);
+    retVal.ln_Type       = READ_BYTE(memory, nodeAddress+8);
+    retVal.ln_Priority   = READ_BYTE(memory, nodeAddress+9);
+    retVal.ln_Name       = READ_LONG(memory, nodeAddress+10);
+    retVal.name          = &_emulatorMemory[retVal.ln_Name];
     
     //track back through the list until we find the list header.
-    uint32_t prevNode=retVal->_ln_Pred;
-    uint32_t useNode=retVal->_ln_Pred;
-        
-    while (prevNode !=0) {
-        useNode=prevNode;
-        prevNode=READ_LONG(memory, prevNode+4);
-    }
+    //    uint32_t prevNode=retVal->_ln_Pred;
+    //uint32_t useNode=retVal->_ln_Pred;
+    //
+    //while (prevNode !=0) {
+    //    useNode=prevNode;
+    //    prevNode=READ_LONG(memory, prevNode+4);
+    //}
     //useNode since only the list header can have 0 for a prevNode, the useNode must be the list header.
 
-    retVal->_list = useNode;
+    //retVal->_list = useNode;
         
     return retVal;
+}
+
+-(unsigned char*)base{
+    return _memory;
+}
+-(void)setBase:(unsigned char*)value{
+    _memory = value;
+}
+
+-(unsigned char*)name{
+    return _nodeName;
+}
+-(void)setName:(unsigned char*)value{
+    _nodeName = value;
 }
 
 -(uint32_t)ln_Succ{
@@ -64,7 +78,7 @@ extern unsigned char* _emulatorMemory;   //Nasty global variable
     return _ln_Type;
 }
 
--(void)setln_Type:(unsigned char)type{
+-(void)setLn_Type:(unsigned char)type{
     _ln_Type = type;
     WRITE_BYTE(_memory,_address+8,type);
 }

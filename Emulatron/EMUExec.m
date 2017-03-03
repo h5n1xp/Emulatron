@@ -92,7 +92,35 @@
     
     [self addTail:newLib.base toList:self.base+378];
     
+    [self scanList:self.base+378];
+    
     return;
+}
+
+
+-(void)scanList:(uint32_t)list{
+    
+    EMUexecNode* libs[16];
+    
+    EMUexecList* listHeader  = [EMUexecList atAddress:list               ofMemory:_emulatorMemory];
+    
+
+   
+    EMUexecNode* currentNode = [EMUexecNode atAddress:listHeader.lh_Head ofMemory:_emulatorMemory];
+    NSInteger index=0;
+    
+    while(currentNode.ln_Succ !=0){
+
+        if(currentNode.ln_Succ !=0){
+            libs[index]=currentNode;
+        }
+        
+        currentNode = [EMUexecNode atAddress:currentNode.ln_Succ ofMemory:_emulatorMemory];
+        index++;
+    }
+    
+    return;
+    
 }
 
 -(uint32_t)thisTask{
@@ -564,6 +592,9 @@ typedef struct{
     EMUexecNode* succNode  = [EMUexecNode atAddress:remNode.ln_Succ ofMemory:_emulatorMemory];
     EMUexecNode* predNode  = [EMUexecNode atAddress:remNode.ln_Pred ofMemory:_emulatorMemory];
 
+    predNode.ln_Pred = succNode.address;
+    succNode.ln_Succ = predNode.address;
+    
     
     
     /*Old code scheduled for deletion.
@@ -596,7 +627,24 @@ typedef struct{
 }
 
 
--(void)remHead:(uint32_t)list{
+-(uint32_t)remHead:(uint32_t)list{
+    
+    EMUexecList* listHeader = [EMUexecList atAddress:list               ofMemory:_emulatorMemory];
+    EMUexecNode* headNode   = [EMUexecNode atAddress:listHeader.lh_Head ofMemory:_emulatorMemory];
+    
+    //if the head node succ is 0, then return 0.
+    if(headNode.ln_Succ==0){
+        return 0;
+    }
+    
+    EMUexecNode* succNode   = [EMUexecNode atAddress:headNode.ln_Succ   ofMemory:_emulatorMemory];
+    
+    listHeader.lh_Head = succNode.address;
+    succNode.ln_Pred = list;
+    
+    return headNode.address;
+    
+    /*Old code scheduled for deletion.
     uint32_t node = READ_LONG(_emulatorMemory, list);
     uint32_t nextNode = READ_LONG(_emulatorMemory, node);
     
@@ -613,9 +661,29 @@ typedef struct{
     
     WRITE_LONG(_emulatorMemory, nextNode+4, list);             //no more prev node
     WRITE_LONG(_emulatorMemory, list, nextNode);          //old next is now list head
+    */
 }
 
--(void)remTail:(uint32_t)list{
+-(uint32_t)remTail:(uint32_t)list{
+    
+    EMUexecList* listHeader = [EMUexecList atAddress:list                   ofMemory:_emulatorMemory];
+    EMUexecNode* tailNode   = [EMUexecNode atAddress:listHeader.lh_TailPred ofMemory:_emulatorMemory];
+    
+    //if the tail node pred is 0, then return 0.
+    if(tailNode.ln_Pred==0){
+        return 0;
+    }
+    
+    EMUexecNode* predNode   = [EMUexecNode atAddress:tailNode.ln_Pred ofMemory:_emulatorMemory];
+    
+    listHeader.lh_TailPred = predNode.address;
+    predNode.ln_Succ = tailNode.ln_Succ;
+    
+    
+    return tailNode.address;
+    
+    
+    /*Old code scheduled for deletion.
     uint32_t node = READ_LONG(_emulatorMemory, list+8);
     uint32_t prevNode = READ_LONG(_emulatorMemory, node+4);
     
@@ -626,13 +694,18 @@ typedef struct{
     
     WRITE_LONG(_emulatorMemory, prevNode, 0);               //no more next node
     WRITE_LONG(_emulatorMemory, list+8, prevNode);          //old prev is now list tail
-    
+    */
     
     
 }
 
 -(void)enqueue:(uint32_t)node inList:(uint32_t)list{
 
+    
+    EMUexecList* listHeader = [EMUexecList atAddress:list ofMemory:_emulatorMemory];
+    
+    
+    
     uint32_t nextNode    = READ_LONG(_emulatorMemory, list);
     uint32_t currentNode = nextNode;
     
@@ -672,7 +745,27 @@ typedef struct{
     
     self.debugOutput.cout =[NSString stringWithFormat:@"Find node name: %s in list at 0x%X",name,listPtr];
     
-    //scan the libnodes for the library
+
+    
+    EMUexecList* listHeader  = [EMUexecList atAddress:listPtr            ofMemory:_emulatorMemory];
+    EMUexecNode* currentNode = [EMUexecNode atAddress:listHeader.lh_Head ofMemory:_emulatorMemory];
+
+    
+    while(currentNode.ln_Succ !=0){
+        
+        if(strcmp(name, currentNode.name)==0){
+            return currentNode.address;
+        }
+        
+        currentNode = [EMUexecNode atAddress:currentNode.ln_Succ ofMemory:_emulatorMemory];
+    }
+
+    //If we get here, we didn't find the node
+    return 0;
+    
+    //Old Code scheduled for deletion
+    
+    /* scan the libnodes for the library
     uint32_t nextNode = READ_LONG(_emulatorMemory,listPtr);
     uint32_t currentNode = nextNode;
     
@@ -698,6 +791,7 @@ typedef struct{
     //will return 0 if not found... only in memory libs for now...
     
     return currentNode;
+     */
 }
 
 
@@ -893,9 +987,9 @@ typedef struct{
  }
 
 -(void)availMem{
-    uint32_t D1 = m68k_get_reg(NULL, M68K_REG_D1);
+    uint32_t type = m68k_get_reg(NULL, M68K_REG_D1);
     
-    if( (D1 & MEMF_CHIP) == MEMF_CHIP){
+    if( (type & MEMF_CHIP) == MEMF_CHIP){
         
         m68k_set_reg(M68K_REG_D0, 2097152); //just return all the Chipram... can't be bothered to scan the free list
     }else{
@@ -935,13 +1029,15 @@ typedef struct{
 -(void)remHead{
     //(list)(a0)
     uint32_t list = m68k_get_reg(NULL, M68K_REG_A0);
-    [self remHead:list];
+    uint32_t node = [self remHead:list];
+    m68k_set_reg(M68K_REG_D0, node);
     return;
 }
 -(void)remTail{
     //(list)(a0)
     uint32_t list = m68k_get_reg(NULL, M68K_REG_A0);
-    [self remTail:list];
+    uint32_t node = [self remTail:list];
+    m68k_set_reg(M68K_REG_D0,node);
     return;
 }
 -(void)enqueue{

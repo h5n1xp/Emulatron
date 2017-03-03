@@ -27,6 +27,9 @@
 
 +(instancetype)atAddress:(uint32_t)nodeAddress ofMemory:(unsigned char*)memory;
 
+-(unsigned char*)base;
+-(unsigned char*)name;
+
 -(uint32_t)ln_Succ;
 -(void)setLn_Succ:(uint32_t)nextAddress;
 -(uint32_t)ln_Pred;

@@ -23,6 +23,13 @@
 
 +(instancetype)atAddress:(uint32_t)nodeAddress ofMemory:(unsigned char*)memory;
 
+-(unsigned char*)base;
+
+-(uint32_t)ln_Succ;
+-(uint32_t)ln_Pred;
+
+
+
 -(uint32_t)lh_Head;
 -(void)setLh_Head:(uint32_t)value;
 -(uint32_t)lh_Tail;
