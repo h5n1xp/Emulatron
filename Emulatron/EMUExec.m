@@ -702,10 +702,27 @@ typedef struct{
 -(void)enqueue:(uint32_t)node inList:(uint32_t)list{
 
     
-    EMUexecList* listHeader = [EMUexecList atAddress:list ofMemory:_emulatorMemory];
+    EMUexecList* listHeader  = [EMUexecList atAddress:list               ofMemory:_emulatorMemory];
+    EMUexecNode* currentNode = [EMUexecNode atAddress:listHeader.lh_Head ofMemory:_emulatorMemory];
+    EMUexecNode* useNode     = [EMUexecNode atAddress:node               ofMemory:_emulatorMemory];
     
+    while(currentNode.ln_Succ !=0){
+        
+        if(currentNode.ln_Priority<=useNode.ln_Priority){
+            
+            [self insert:node behind:currentNode.ln_Pred inList:list];
+            return;
+        }
+        
+        currentNode = [EMUexecNode atAddress:currentNode.ln_Succ ofMemory:_emulatorMemory];
+    }
     
+    //If we get here, the list must be empty or all higher priority
+    [self addTail:node toList:list];
+    return;
+
     
+    /* Old code scheduled for deletion
     uint32_t nextNode    = READ_LONG(_emulatorMemory, list);
     uint32_t currentNode = nextNode;
     
@@ -737,6 +754,7 @@ typedef struct{
     
     [self addTail:node toList:list];
     return;
+     */
 }
 
 
