@@ -3,7 +3,7 @@
 //  Emulatron
 //
 //  Created by Matt Parsons on 02/02/2017.
-//  Copyright © 2017 Matt Pasons. All rights reserved.
+//  Copyright © 2017 Matt Parsons. All rights reserved.
 //
 
 #import "Emulator.h"
@@ -29,21 +29,29 @@
 //Load Seg defines... Shouldn't be in this object... should be in EMUDos
 #define HUNK_UNIT           0999
 #define HUNK_NAME           1000
-#define HUNK_CODE           1001
+#define HUNK_CODE           1001    //68K code
 #define HUNK_DATA           1002
 #define HUNK_BSS            1003
 #define HUNK_RELOC32        1004
-#define HUNK_RELOC32SHORT   1020
 #define HUNK_RELOC16        1005
 #define HUNK_RELOC8         1006
-#define HUNK_DRELOC32       1015
-#define HUNK_DRELOC16       1016
-#define HUNK_DRELOC8        1017
 #define HUNK_EXT            1007
 #define HUNK_SYMBOL         1008
 #define HUNK_DEBUG          1009
 #define HUNK_END            1010
 #define HUNK_HEADER         1011
+#define HUNK_DRELOC32       1015
+#define HUNK_DRELOC16       1016
+#define HUNK_DRELOC8        1017
+#define HUNK_RELOC32SHORT   1020
+
+//Below are some musings as to how the Hunk format could be extended... Though ELF is abviously the way forward.
+#define HUNK_SYSTEM         1012    //I propose a "System Hunk" which specifies more deatails about the code, CPU, Endian, ABI etc.
+#define HUNK_CODEX86        1021    //x86    code
+#define HUNK_CODEX64        1031    //X86-64 code
+#define HUNK_RELOC64        1034    //Relcate 64bit
+#define HUNK_CODEA32        1041    //ARM32  code
+#define HUNK_CODEA64        1051    //ARM64  code
 
 //HORRIBLE GLOBAL VARIABLES... THIS IS THE LINK BETWEEN THE C CODE AND THE OBJ-C code
 uint8_t*   _emulatorMemory=NULL;

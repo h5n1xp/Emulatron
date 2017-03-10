@@ -3,7 +3,7 @@
 //  Emulatron
 //
 //  Created by Matt Parsons on 16/02/2017.
-//  Copyright © 2017 Matt Pasons. All rights reserved.
+//  Copyright © 2017 Matt Parsons. All rights reserved.
 //
 
 #import "EMUConsoleView.h"

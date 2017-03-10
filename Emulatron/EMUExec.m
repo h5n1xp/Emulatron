@@ -3,7 +3,7 @@
 //  Emulatron
 //
 //  Created by Matt Parsons on 03/02/2017.
-//  Copyright © 2017 Matt Pasons. All rights reserved.
+//  Copyright © 2017 Matt Parsons. All rights reserved.
 //
 
 #import "EMUExec.h"
@@ -92,7 +92,7 @@
     
     [self addTail:newLib.base toList:self.base+378];
     
-    [self scanList:self.base+378];
+    //[self scanList:self.base+378];
     
     return;
 }
